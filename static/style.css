@@ -1,0 +1,263 @@
+:root {
+  color-scheme: light;
+  --ink: #1f2933;
+  --muted: #52606d;
+  --line: #d9e2ec;
+  --surface: #ffffff;
+  --background: #eef2f6;
+  --accent: #1d4ed8;
+  --active: #0f766e;
+  --cutoff: #475569;
+  --saturation: #b91c1c;
+  --warning: #92400e;
+  --warning-bg: #fef3c7;
+  --error: #b91c1c;
+  --error-bg: #fee2e2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem 4rem;
+  background: var(--background);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+.card {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 0.35rem 0 1.5rem;
+  color: var(--muted);
+}
+
+.error,
+.warning,
+.note {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+
+.error {
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid #fecaca;
+}
+
+.warning {
+  color: var(--warning);
+  background: var(--warning-bg);
+  border: 1px solid #fde68a;
+}
+
+.note {
+  color: var(--muted);
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+}
+
+.bias-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #bcccdc;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.field.invalid input {
+  border-color: var(--error);
+  background: #fff5f5;
+}
+
+.actions {
+  display: flex;
+  align-items: end;
+  grid-column: 1 / -1;
+}
+
+button {
+  padding: 0.6rem 1.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1e40af;
+}
+
+button:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.results,
+.formulas {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.results-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.results h2,
+.formulas h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.results h3 {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-active {
+  background: var(--active);
+}
+
+.badge-cutoff {
+  background: var(--cutoff);
+}
+
+.badge-saturation {
+  background: var(--saturation);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+caption {
+  padding-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+thead th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tbody th {
+  font-weight: 600;
+}
+
+tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.meta {
+  margin: 0.35rem 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.formulas pre {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: 1rem 0.5rem 2rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  th,
+  td {
+    padding: 0.45rem 0.4rem;
+  }
+}

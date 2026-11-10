@@ -1,0 +1,61 @@
+import unittest
+
+from app import create_app, parse_form
+
+FORM = {
+    "vcc": "12", "r1": "47", "r2": "10", "rc": "4.7",
+    "re": "1", "beta": "150", "vbe": "0.7",
+}
+
+
+class TestParseForm(unittest.TestCase):
+    def test_converts_kilohms_to_ohms(self):
+        values = parse_form(FORM)
+        self.assertEqual(values["r1"], 47_000.0)
+        self.assertEqual(values["re"], 1_000.0)
+
+
+class TestRoutes(unittest.TestCase):
+    def setUp(self):
+        self.client = create_app().test_client()
+
+    def test_get_renders_all_fields(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        for field in ("vcc", "r1", "r2", "rc", "re", "beta", "vbe"):
+            self.assertIn(f'name="{field}"', response.get_data(as_text=True))
+
+    def test_active_submission_shows_operating_point(self):
+        response = self.client.post("/", data=FORM)
+        page = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Active", page)
+        self.assertIn("4.446", page)
+        self.assertIn("1.324", page)
+
+    def test_cutoff_submission_warns(self):
+        response = self.client.post("/", data={**FORM, "r1": "100", "r2": "1"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Cutoff", response.get_data(as_text=True))
+
+    def test_saturation_submission_warns_and_notes_approximation(self):
+        response = self.client.post("/", data={**FORM, "r1": "10", "r2": "47"})
+        page = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Saturation", page)
+        self.assertIn("not meaningful", page)
+
+    def test_zero_vcc_returns_400_with_message(self):
+        response = self.client.post("/", data={**FORM, "vcc": "0"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("VCC must be greater than zero", response.get_data(as_text=True))
+
+    def test_non_numeric_resistor_returns_400(self):
+        response = self.client.post("/", data={**FORM, "r1": "abc"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("R1 must be a number", response.get_data(as_text=True))
+
+    def test_blank_field_returns_400(self):
+        response = self.client.post("/", data={**FORM, "beta": "  "})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("beta is required", response.get_data(as_text=True))

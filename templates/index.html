@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT CE DC Bias Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="card">
+    <header class="page-header">
+      <h1>BJT Common-Emitter DC Bias</h1>
+      <p class="subtitle">
+        Voltage-divider bias operating point for ENG29 2121. DC analysis only.
+      </p>
+    </header>
+
+    {% if error_message %}
+    <p class="error" role="alert">{{ error_message }}</p>
+    {% endif %}
+
+    <form method="post" class="bias-form">
+      <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
+        <label for="vcc">VCC (V)</label>
+        <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
+               placeholder="12" value="{{ form.get('vcc', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
+        <label for="r1">R1 (kΩ)</label>
+        <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
+               placeholder="47" value="{{ form.get('r1', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 'r2' %} invalid{% endif %}">
+        <label for="r2">R2 (kΩ)</label>
+        <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
+               placeholder="10" value="{{ form.get('r2', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
+        <label for="rc">RC (kΩ)</label>
+        <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
+               placeholder="4.7" value="{{ form.get('rc', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 're' %} invalid{% endif %}">
+        <label for="re">RE (kΩ)</label>
+        <input id="re" name="re" type="number" step="any" inputmode="decimal"
+               placeholder="1" value="{{ form.get('re', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
+        <label for="beta">beta</label>
+        <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
+               placeholder="150" value="{{ form.get('beta', '') }}" required>
+      </div>
+      <div class="field{% if error_field == 'vbe' %} invalid{% endif %}">
+        <label for="vbe">VBE (V)</label>
+        <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
+               placeholder="0.7" value="{{ form.get('vbe', '') }}" required>
+      </div>
+      <div class="actions">
+        <button type="submit">Calculate</button>
+      </div>
+    </form>
+
+    {% if result %}
+    <section class="results" aria-live="polite">
+      <div class="results-header">
+        <h2>DC operating point</h2>
+        <span class="badge badge-{{ result.region }}">{{ result.region|capitalize }}</span>
+      </div>
+
+      {% if result.warning %}
+      <p class="warning">{{ result.warning }}</p>
+      {% endif %}
+
+      <table class="quantity-table">
+        <caption>Operating point</caption>
+        <tbody>
+          <tr><th scope="row">VBB</th><td>{{ result.vbb|volts }}</td></tr>
+          <tr><th scope="row">RB</th><td>{{ result.rb|kilohms }}</td></tr>
+          <tr><th scope="row">VB</th><td>{{ result.vb|volts }}</td></tr>
+          <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td></tr>
+          <tr><th scope="row">VC</th><td>{{ result.vc|volts }}</td></tr>
+          <tr><th scope="row">IB</th><td>{{ result.ib|microamps }}</td></tr>
+          <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td></tr>
+          <tr><th scope="row">IE</th><td>{{ result.ie|milliamps }}</td></tr>
+          <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Independent cross-check</h3>
+      <table class="comparison-table">
+        <caption>Exact solution versus beta-independent approximation</caption>
+        <thead>
+          <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">VE</th>
+            <td>{{ result.ve|volts }}</td>
+            <td>{{ approx.ve|volts }}</td>
+          </tr>
+          <tr>
+            <th scope="row">IC</th>
+            <td>{{ result.ic|milliamps }}</td>
+            <td>{{ approx.ic|milliamps }}</td>
+          </tr>
+          <tr>
+            <th scope="row">VCE</th>
+            <td>{{ result.vce|volts }}</td>
+            <td>{{ approx.vce|volts }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="meta">
+        beta&middot;RE / RB = {{ "%.1f"|format(approx.beta_re_over_rb) }}
+        {% if approx.valid %}
+        &mdash; approximation is valid (ratio &ge; 10).
+        {% else %}
+        &mdash; approximation is outside its usual validity range (ratio &lt; 10).
+        {% endif %}
+      </p>
+      <p class="meta">
+        IC difference:
+        {% if ic_diff is not none %}{{ "%.1f"|format(ic_diff) }}%{% else %}n/a{% endif %}
+      </p>
+
+      {% if approx_note %}
+      <p class="note">{{ approx_note }}</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="formulas">
+      <h2>Formulas</h2>
+      <p>Exact solution:</p>
+      <pre>VBB = VCC * R2 / (R1 + R2)
+RB  = R1 * R2 / (R1 + R2)
+IB  = (VBB - VBE) / (RB + (1 + beta) * RE)
+IC  = beta * IB
+IE  = (1 + beta) * IB
+VE  = IE * RE
+VC  = VCC - IC * RC
+VB  = VBE + VE
+VCE = VC - VE</pre>
+      <p>Beta-independent approximation:</p>
+      <pre>VE  ~= VBB - VBE
+IE  ~= VE / RE
+IC  ~= IE
+VCE ~= VCC - IC * (RC + RE)</pre>
+      <p class="meta">
+        Valid when beta * RE / RB &ge; 10. The approximation assumes the
+        active region and is shown for comparison only.
+      </p>
+    </section>
+  </main>
+</body>
+</html>
