@@ -22,7 +22,7 @@ python -m venv .venv
 .venv\Scripts\python app.py
 ```
 
-Open <http://127.0.0.1:5000>.
+Open <http://127.0.0.1:5000> (or double-click `run.bat`).
 
 ## Tests
 
