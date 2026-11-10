@@ -59,3 +59,27 @@ class TestRoutes(unittest.TestCase):
         response = self.client.post("/", data={**FORM, "beta": "  "})
         self.assertEqual(response.status_code, 400)
         self.assertIn("beta is required", response.get_data(as_text=True))
+
+    def test_active_submission_calls_approximation_valid(self):
+        page = self.client.post("/", data=FORM).get_data(as_text=True)
+        self.assertIn("approximation is valid", page)
+
+    def test_saturation_submission_does_not_claim_approximation_valid(self):
+        page = self.client.post("/", data={**FORM, "r1": "10", "r2": "47"})
+        page = page.get_data(as_text=True)
+        self.assertIn("not applicable outside the active region", page)
+        self.assertNotIn("approximation is valid", page)
+
+    def test_cutoff_submission_does_not_claim_approximation_valid(self):
+        page = self.client.post("/", data={**FORM, "r1": "100", "r2": "1"})
+        page = page.get_data(as_text=True)
+        self.assertIn("not applicable outside the active region", page)
+        self.assertNotIn("approximation is valid", page)
+
+    def test_active_low_beta_approximation_is_flagged(self):
+        data = {
+            **FORM, "r1": "1", "r2": "1", "rc": "0.01",
+            "re": "0.001", "beta": "10",
+        }
+        page = self.client.post("/", data=data).get_data(as_text=True)
+        self.assertIn("outside its usual validity range", page)

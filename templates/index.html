@@ -113,10 +113,15 @@
 
       <p class="meta">
         beta&middot;RE / RB = {{ "%.1f"|format(approx.beta_re_over_rb) }}
-        {% if approx.valid %}
+        {% if result.region == 'active' %}
+          {% if approx.valid %}
         &mdash; approximation is valid (ratio &ge; 10).
-        {% else %}
+          {% else %}
         &mdash; approximation is outside its usual validity range (ratio &lt; 10).
+          {% endif %}
+        {% else %}
+        &mdash; not applicable outside the active region (ratio condition
+        {% if approx.valid %}met{% else %}not met{% endif %}).
         {% endif %}
       </p>
       <p class="meta">
