@@ -26,6 +26,15 @@ class BiasInput:
 
 
 @dataclass(frozen=True)
+class ApproxResult:
+    ve: float
+    ic: float
+    vce: float
+    beta_re_over_rb: float
+    valid: bool
+
+
+@dataclass(frozen=True)
 class BiasResult:
     vbb: float
     rb: float
@@ -108,3 +117,25 @@ def analyze(bias: BiasInput) -> BiasResult:
         region="active",
         warning=None,
     )
+
+
+def analyze_approximate(bias: BiasInput) -> ApproxResult:
+    vbb = bias.vcc * bias.r2 / (bias.r1 + bias.r2)
+    rb = bias.r1 * bias.r2 / (bias.r1 + bias.r2)
+    ve = vbb - bias.vbe
+    ic = ve / bias.re
+    vce = bias.vcc - ic * (bias.rc + bias.re)
+    ratio = bias.beta * bias.re / rb
+    return ApproxResult(
+        ve=ve,
+        ic=ic,
+        vce=vce,
+        beta_re_over_rb=ratio,
+        valid=ratio >= 10,
+    )
+
+
+def ic_difference_percent(exact_ic: float, approx_ic: float) -> float | None:
+    if exact_ic == 0:
+        return None
+    return abs(exact_ic - approx_ic) / abs(exact_ic) * 100

@@ -76,3 +76,33 @@ class TestRegions(unittest.TestCase):
         self.assertAlmostEqual(result.ic, 1.9323696e-03, places=10)
         self.assertAlmostEqual(result.ie, result.ib + result.ic, places=12)
         self.assertIn("saturat", result.warning.lower())
+
+
+from engineering.bjt import analyze_approximate, ic_difference_percent
+
+LOW_BETA_RE = BiasInput(
+    vcc=12.0, r1=1_000.0, r2=1_000.0, rc=1_000.0, re=10.0,
+    beta=10.0, vbe=0.7,
+)
+
+
+class TestApproximation(unittest.TestCase):
+    def test_beta_independent_approximation(self):
+        approx = analyze_approximate(ACTIVE)
+        self.assertAlmostEqual(approx.ve, 1.4052631579, places=9)
+        self.assertAlmostEqual(approx.ic, 0.0014052631578947367, places=12)
+        self.assertAlmostEqual(approx.vce, 3.99, places=9)
+        self.assertAlmostEqual(approx.beta_re_over_rb, 18.191489, places=5)
+        self.assertTrue(approx.valid)
+
+    def test_approximation_invalid_when_beta_re_is_small(self):
+        self.assertFalse(analyze_approximate(LOW_BETA_RE).valid)
+
+    def test_difference_percent(self):
+        approx = analyze_approximate(ACTIVE)
+        self.assertAlmostEqual(
+            ic_difference_percent(analyze(ACTIVE).ic, approx.ic), 6.163743, places=5
+        )
+
+    def test_difference_is_none_when_exact_current_is_zero(self):
+        self.assertIsNone(ic_difference_percent(0.0, 0.001))
