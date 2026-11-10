@@ -83,3 +83,14 @@ class TestRoutes(unittest.TestCase):
         }
         page = self.client.post("/", data=data).get_data(as_text=True)
         self.assertIn("outside its usual validity range", page)
+
+    def test_page_includes_static_circuit_diagram(self):
+        page = self.client.get("/").get_data(as_text=True)
+        self.assertIn('id="bias-circuit-title"', page)
+        self.assertIn('id="bias-circuit-desc"', page)
+        self.assertIn('id="bias-circuit-arrow"', page)
+        for label in (
+            ">VCC<", ">VB<", ">VC<", ">VE<", ">R1<", ">R2<", ">RC<",
+            ">RE<", ">Q1<",
+        ):
+            self.assertIn(label, page)

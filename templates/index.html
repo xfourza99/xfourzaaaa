@@ -15,6 +15,79 @@
       </p>
     </header>
 
+    <figure class="schematic">
+      <svg viewBox="0 0 640 420" role="img"
+           aria-labelledby="bias-circuit-title bias-circuit-desc"
+           xmlns="http://www.w3.org/2000/svg">
+        <title id="bias-circuit-title">Voltage-divider biased NPN common-emitter circuit</title>
+        <desc id="bias-circuit-desc">VCC feeds R1 and RC. R1 and R2 form the base voltage divider, RC is the collector resistor, RE is the emitter resistor, and Q1 is the NPN transistor. VB, VC and VE mark the base, collector and emitter voltages.</desc>
+        <defs>
+          <marker id="bias-circuit-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2933"/>
+          </marker>
+        </defs>
+        <g fill="none" stroke="#1f2933" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+          <line x1="190" y1="50" x2="345" y2="50"/>
+          <line x1="267" y1="50" x2="267" y2="32"/>
+
+          <line x1="190" y1="50" x2="190" y2="90"/>
+          <rect x="178" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="190" y1="150" x2="190" y2="220"/>
+
+          <line x1="190" y1="220" x2="190" y2="270"/>
+          <rect x="178" y="270" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="190" y1="330" x2="190" y2="380"/>
+
+          <line x1="190" y1="220" x2="300" y2="220"/>
+          <line x1="300" y1="195" x2="300" y2="245"/>
+
+          <line x1="300" y1="205" x2="345" y2="180"/>
+          <line x1="345" y1="180" x2="345" y2="150"/>
+
+          <line x1="345" y1="50" x2="345" y2="90"/>
+          <rect x="333" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="345" y1="150" x2="345" y2="180"/>
+
+          <line x1="300" y1="235" x2="340" y2="257"
+                marker-end="url(#bias-circuit-arrow)"/>
+          <line x1="340" y1="257" x2="345" y2="260"/>
+
+          <line x1="345" y1="260" x2="345" y2="300"/>
+          <rect x="333" y="300" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="345" y1="360" x2="345" y2="380"/>
+
+          <line x1="190" y1="380" x2="345" y2="380"/>
+          <line x1="267" y1="380" x2="267" y2="392"/>
+          <line x1="251" y1="392" x2="283" y2="392"/>
+          <line x1="258" y1="398" x2="276" y2="398"/>
+          <line x1="264" y1="404" x2="270" y2="404"/>
+        </g>
+        <g class="node">
+          <circle cx="267" cy="50" r="4"/>
+          <circle cx="190" cy="220" r="4"/>
+          <circle cx="345" cy="180" r="4"/>
+          <circle cx="345" cy="260" r="4"/>
+        </g>
+        <g class="diagram-label">
+          <text x="267" y="24" text-anchor="middle">VCC</text>
+          <text x="166" y="125" text-anchor="end">R1</text>
+          <text x="166" y="305" text-anchor="end">R2</text>
+          <text x="372" y="125">RC</text>
+          <text x="372" y="335">RE</text>
+          <text x="360" y="228">Q1</text>
+          <text x="360" y="244" class="small">NPN</text>
+          <text x="204" y="210">VB</text>
+          <text x="356" y="172">VC</text>
+          <text x="356" y="282">VE</text>
+        </g>
+      </svg>
+      <figcaption>
+        Voltage-divider bias network for an NPN common-emitter stage (DC bias only).
+      </figcaption>
+    </figure>
+
     {% if error_message %}
     <p class="error" role="alert">{{ error_message }}</p>
     {% endif %}

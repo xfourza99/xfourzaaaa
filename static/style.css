@@ -261,3 +261,43 @@ tbody tr:nth-child(even) {
     padding: 0.45rem 0.4rem;
   }
 }
+
+.schematic {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.schematic svg {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.schematic text {
+  fill: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  stroke: none;
+}
+
+.schematic .small {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.schematic .node circle {
+  fill: var(--ink);
+  stroke: none;
+}
+
+.schematic figcaption {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
