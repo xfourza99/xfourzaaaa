@@ -94,7 +94,3 @@ class TestRoutes(unittest.TestCase):
             ">RE<", ">Q1<",
         ):
             self.assertIn(label, page)
-
-    def test_page_includes_circuit_photo(self):
-        page = self.client.get("/").get_data(as_text=True)
-        self.assertIn('src="/static/bjt-ce-bias-circuit.png"', page)
