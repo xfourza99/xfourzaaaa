@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix the one Important review finding — the approximation is called "valid" outside the active region — and add the approved static circuit diagram to the page.
+**Goal:** Fix the one Important review finding — the approximation is called "valid" outside the active region — add the approved static circuit diagram to the page, and ship the partner-supplied circuit image in the README.
 
-**Architecture:** Template and CSS changes only; the engineering module, routes and form parsing are unchanged. Route tests pin the new copy, and a GET test pins the SVG.
+**Architecture:** Template, CSS, README and one image asset change; the engineering module, routes and form parsing are unchanged. Route tests pin the new copy, a GET test pins the SVG, and a docs test pins the README image.
 
 **Tech Stack:** Python 3.12, Flask, Jinja2, `unittest`.
 
@@ -17,8 +17,9 @@
 - No new dependencies; Flask stays the only runtime dependency.
 - Tests use `unittest`; the existing 24 tests must stay green.
 - No JavaScript, database, login, AC or transient analysis.
-- The circuit diagram is a static inline SVG: it must not show live or submitted values and must not be editable.
-- Engineering logic stays in `engineering/bjt.py`; no math moves into templates.
+- The page diagram is a static inline SVG: it must not show live or submitted values and must not be editable.
+- The README diagram is the partner-supplied PNG, copied byte-for-byte to `docs/images/bjt-ce-bias-circuit.png`. Do not redraw or resample it.
+- Engineering logic stays in `engineering/bjt.py`; no math moves into templates or README.
 - `VCE_SAT = 0.2` volts and all unit conventions stay unchanged.
 - Git is not on PATH. Use `& 'C:\Users\B6814182\AppData\Local\Programs\Git\cmd\git.exe'`.
 - Leave `electrical.py` and `test_electrical.py` untouched.
@@ -30,6 +31,7 @@
 - The diagram must contain no submitted values; it is a fixed reference drawing, not a live schematic.
 - The diagram must render on both the empty form page and a results page, and must not disturb the form or results tables.
 - The SVG must scale on narrow screens via `viewBox`, `width: 100%` and `height: auto`.
+- The README image link must resolve from the repository root on GitHub, and the PNG must be committed, not left in a temp path.
 
 ---
 
@@ -276,3 +278,81 @@ Expected: PASS (29 tests).
 & 'C:\Users\B6814182\AppData\Local\Programs\Git\cmd\git.exe' add templates/index.html static/style.css tests/test_app.py
 & 'C:\Users\B6814182\AppData\Local\Programs\Git\cmd\git.exe' commit -m "feat: add static bias circuit diagram"
 ```
+
+---
+
+### Task 3: Partner-supplied circuit image in the README
+
+**Files:**
+- Create: `docs/images/bjt-ce-bias-circuit.png`
+- Create: `tests/test_docs.py`
+- Modify: `README.md`
+
+**Interfaces:**
+- Consumes: nothing from the app.
+- Produces: a `## Circuit` section whose image path is `docs/images/bjt-ce-bias-circuit.png`.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `tests/test_docs.py`:
+
+```python
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+IMAGE = ROOT / "docs" / "images" / "bjt-ce-bias-circuit.png"
+README = ROOT / "README.md"
+
+
+class TestDocs(unittest.TestCase):
+    def test_readme_embeds_the_circuit_image(self):
+        text = README.read_text(encoding="utf-8")
+        self.assertIn("docs/images/bjt-ce-bias-circuit.png", text)
+
+    def test_circuit_image_is_a_committed_png(self):
+        self.assertTrue(IMAGE.is_file(), "circuit image missing from docs/images")
+        self.assertEqual(IMAGE.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `.venv\Scripts\python -m unittest discover -s tests -p "test_docs.py" -v`
+Expected: FAIL — `README` has no image path and `docs/images/bjt-ce-bias-circuit.png` does not exist.
+
+- [ ] **Step 3: Copy the partner image and add the README section**
+
+```powershell
+New-Item -ItemType Directory -Force docs\images | Out-Null
+Copy-Item 'C:\Users\B6814182\AppData\Local\Temp\opencode\uploads\adc93835-6d1e-42bd-be06-aaa8e6c47cab\image.png' 'docs\images\bjt-ce-bias-circuit.png'
+Get-Item docs\images\bjt-ce-bias-circuit.png | Select-Object Name,Length
+```
+
+Expected: the copy reports the same byte length as the uploaded file (492801).
+
+Insert this section in `README.md` immediately after the intro paragraph and before `## Requirements`:
+
+```markdown
+## Circuit
+
+![Voltage-divider biased NPN common-emitter stage](docs/images/bjt-ce-bias-circuit.png)
+```
+
+Add one line to the `Project layout` code block:
+
+```text
+docs/images/            circuit image used by this README
+```
+
+- [ ] **Step 4: Run the full suite**
+
+Run: `.venv\Scripts\python -m unittest discover -s tests -v`
+Expected: PASS (30 tests).
+
+- [ ] **Step 5: Commit**
+
+```powershell
+& 'C:\Users\B6814182\AppData\Local\Programs\Git\cmd\git.exe' add README.md docs/images tests/test_docs.py
+& 'C:\Users\B6814182\AppData\Local\Programs\Git\cmd\git.exe' commit -m "docs: add circuit image to README"
+```
+
