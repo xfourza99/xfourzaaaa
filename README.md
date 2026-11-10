@@ -5,6 +5,10 @@ point of a voltage-divider-biased common-emitter BJT stage, validates the bias
 values, labels the region, and shows a beta-independent approximation next to
 the exact solution as an independent cross-check. The analysis is DC only.
 
+## Circuit
+
+![Voltage-divider biased NPN common-emitter stage (reference drawing)](docs/images/bjt-ce-bias-circuit.png)
+
 ## Requirements
 
 - Python 3.12
@@ -97,6 +101,7 @@ engineering/bjt.py      exact and approximate engineering calculations
 templates/index.html    single-page form and results
 static/style.css        stylesheet
 tests/                  engineering and route tests
+docs/images/            circuit image used by this README
 ```
 
 ---
