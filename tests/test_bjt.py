@@ -106,3 +106,42 @@ class TestApproximation(unittest.TestCase):
 
     def test_difference_is_none_when_exact_current_is_zero(self):
         self.assertIsNone(ic_difference_percent(0.0, 0.001))
+
+
+from engineering.bjt import ValidationError, validate
+
+VALID_VALUES = {
+    "vcc": 12.0, "r1": 47_000.0, "r2": 10_000.0, "rc": 4_700.0,
+    "re": 1_000.0, "beta": 150.0, "vbe": 0.7,
+}
+
+
+class TestValidation(unittest.TestCase):
+    def assert_invalid(self, field, message, **changes):
+        values = {**VALID_VALUES, **changes}
+        with self.assertRaises(ValidationError) as caught:
+            validate(values)
+        self.assertEqual(caught.exception.field, field)
+        self.assertEqual(caught.exception.message, message)
+
+    def test_valid_values_become_bias_input(self):
+        self.assertEqual(validate(VALID_VALUES), ACTIVE)
+
+    def test_vcc_must_be_positive(self):
+        self.assert_invalid("vcc", "VCC must be greater than zero", vcc=0.0)
+
+    def test_each_resistor_must_be_positive(self):
+        for field, label in (("r1", "R1"), ("r2", "R2"), ("rc", "RC"), ("re", "RE")):
+            self.assert_invalid(field, f"{label} must be greater than zero", **{field: 0.0})
+
+    def test_beta_must_be_at_least_one(self):
+        self.assert_invalid("beta", "beta must be at least 1", beta=0.5)
+
+    def test_vbe_must_be_positive(self):
+        self.assert_invalid("vbe", "VBE must be greater than zero", vbe=0.0)
+
+    def test_vbe_must_be_below_vcc(self):
+        self.assert_invalid("vbe", "VBE must be less than VCC", vbe=12.0)
+
+    def test_non_finite_values_are_rejected(self):
+        self.assert_invalid("vcc", "VCC must be a finite number", vcc=float("inf"))
