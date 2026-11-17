@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>A1-A5 Validation Table</title>
+<style>
+  body {
+    font-family: "Segoe UI", "Leelawadee UI", system-ui, sans-serif;
+    background: #ffffff;
+    color: #1f2933;
+    margin: 0;
+    padding: 32px;
+  }
+  .sheet { width: 1080px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #52606d; font-size: 13px; margin: 0 0 14px; }
+  .meta {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    font-size: 13px; color: #33404d;
+    background: #f8fafc; border: 1px solid #d9e2ec;
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+  }
+  .meta b { color: #1f2933; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  caption { text-align: left; font-weight: 600; padding-bottom: 8px; }
+  th, td { border: 1px solid #d9e2ec; padding: 8px 10px; vertical-align: top; }
+  thead th { background: #eef2f6; font-size: 12.5px; text-transform: none; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  td.id { font-weight: 700; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; color: #fff; }
+  .pass { background: #0f766e; }
+  .fail { background: #b91c1c; }
+  .small { font-size: 12px; color: #52606d; }
+  .note {
+    margin-top: 14px; padding: 10px 14px; font-size: 12.5px;
+    background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;
+  }
+  .foot { margin-top: 10px; font-size: 12px; color: #52606d; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>ผลการทดสอบเว็บคำนวณจุดไบแอส BJT — กรณี A1–A5</h1>
+  <p class="sub">BJT Common-Emitter DC Bias Web App · ENG29 2121 · ทดสอบบนเว็บจริง (Playwright MCP, Chrome isolated profile) · 17 พ.ย. 2026</p>
+
+  <div class="meta">
+    <span><b>ค่าส่วนกลาง:</b> VCC = 12 V · RC = 2.2 kΩ · beta = 100 · VBE = 0.70 V</span>
+    <span><b>เกณฑ์ผ่าน:</b> ΔIC ≤ 0.01 mA และ ΔVCE ≤ 0.02 V</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>โหมดวงจร</th>
+        <th>อินพุตเพิ่มเติม</th>
+        <th>ค่าคาดหมาย</th>
+        <th>ผลที่เว็บแสดง (พร้อมหน่วย)</th>
+        <th>ΔIC (mA)</th>
+        <th>ΔVCE (V)</th>
+        <th>สถานะ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="id">A1</td>
+        <td>Voltage Divider</td>
+        <td>R1 = 100 kΩ<br>R2 = 22 kΩ<br>RE = 1 kΩ</td>
+        <td class="mono">IC = 1.24 mA<br>VCE = 8.02 V</td>
+        <td class="mono">IC = 1.230 mA<br>VCE = 8.052 V<br><span class="small">IB = 12.30 µA, VE = 1.242 V, VC = 9.294 V, Active</span></td>
+        <td class="mono">0.010</td>
+        <td class="mono">0.033</td>
+        <td><span class="badge fail">FAIL</span></td>
+      </tr>
+      <tr>
+        <td class="id">A2</td>
+        <td>Fixed Bias</td>
+        <td>RB = 1000 kΩ<br>(1 MΩ, ไม่มีช่อง RE)</td>
+        <td class="mono">IC = 1.13 mA<br>VCE = 9.51 V</td>
+        <td class="mono">IC = 1.130 mA<br>VCE = 9.514 V<br><span class="small">VE = 0.000 V, Active</span></td>
+        <td class="mono">0.000</td>
+        <td class="mono">0.004</td>
+        <td><span class="badge pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td class="id">A3</td>
+        <td>Emitter Bias</td>
+        <td>RB = 1000 kΩ<br>RE = 1 kΩ</td>
+        <td class="mono">IC = 1.03 mA<br>VCE = 8.70 V</td>
+        <td class="mono">IC = 1.026 mA<br>VCE = 8.705 V<br><span class="small">IB = 10.26 µA, VE = 1.037 V, Active</span></td>
+        <td class="mono">0.004</td>
+        <td class="mono">0.005</td>
+        <td><span class="badge pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td class="id">A4</td>
+        <td>Emitter Bias</td>
+        <td>RB = 1000 kΩ<br>RE = 2 kΩ</td>
+        <td class="mono">IC ≈ 0.94 mA<br>VCE ≈ 8.03 V</td>
+        <td class="mono">IC = 0.940 mA<br>VCE = 8.033 V<br><span class="small">IC ลดลงจาก A3: 1.026 → 0.940 mA ✓, Active</span></td>
+        <td class="mono">0.000</td>
+        <td class="mono">0.003</td>
+        <td><span class="badge pass">PASS</span></td>
+      </tr>
+      <tr>
+        <td class="id">A5</td>
+        <td>Fixed Bias</td>
+        <td>RB = 0 (ค่าไม่ถูกต้อง)</td>
+        <td>แจ้งเตือนให้แก้ RB<br>เว็บไม่ล่ม<br>ไม่มีผลรอบเก่าค้าง</td>
+        <td class="mono">HTTP 400 · ข้อความ "RB must be greater than zero"<br><span class="small">ไม่แสดงตารางผลลัพธ์, หน้าใช้งานได้ต่อปกติ</span></td>
+        <td class="mono">–</td>
+        <td class="mono">–</td>
+        <td><span class="badge pass">PASS</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>หมายเหตุ A1:</b> ค่าคาดหมายของ A1 ตรงกับสมการที่ใช้ <span class="mono">IB = (VBB − VBE) / (RB + β·RE)</span>
+    ส่วนเว็บแอปใช้ <span class="mono">RB + (β+1)·RE</span> ตาม spec ที่ตกลงกัน (IC = 1.230 mA, VCE = 8.052 V) —
+    A2–A4 ยืนยันว่าสมการของเว็บถูกต้องตรงกับแผ่นทดสอบ จึงเป็นข้อความคนละ convention ไม่ใช่การคำนวณผิด
+  </div>
+
+  <p class="foot">
+    วิธีทดสอบ: เปิด http://127.0.0.1:5000/ ด้วย Playwright → เลือกโหมดวงจร → กรอกค่าตามหน่วยบนฟอร์ม (kΩ/V) → กดปุ่มคำนวณจริงทีละกรณี
+    → อ่าน snapshot หน้าจอใหม่หลังทุกครั้งที่ส่งฟอร์ม · ภาพหน้าจอเต็มหน้าของแต่ละกรณีอยู่ที่ docs/evidence/
+  </p>
+</div>
+</body>
+</html>
