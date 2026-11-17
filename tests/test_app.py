@@ -3,6 +3,7 @@ import unittest
 from app import create_app, parse_form
 
 FORM = {
+    "mode": "divider",
     "vcc": "12", "r1": "47", "r2": "10", "rc": "4.7",
     "re": "1", "beta": "150", "vbe": "0.7",
 }
@@ -10,7 +11,7 @@ FORM = {
 
 class TestParseForm(unittest.TestCase):
     def test_converts_kilohms_to_ohms(self):
-        values = parse_form(FORM)
+        values = parse_form(FORM, "divider")
         self.assertEqual(values["r1"], 47_000.0)
         self.assertEqual(values["re"], 1_000.0)
 

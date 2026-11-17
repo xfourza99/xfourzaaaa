@@ -11,10 +11,12 @@
     <header class="page-header">
       <h1>BJT Common-Emitter DC Bias</h1>
       <p class="subtitle">
-        Voltage-divider bias operating point for ENG29 2121. DC analysis only.
+        Voltage-divider, fixed-bias and emitter-bias operating points for
+        ENG29 2121. DC analysis only.
       </p>
     </header>
 
+    {% if mode == 'divider' %}
     <figure class="schematic">
       <svg viewBox="0 0 640 420" role="img"
            aria-labelledby="bias-circuit-title bias-circuit-desc"
@@ -87,17 +89,36 @@
         Voltage-divider bias network for an NPN common-emitter stage (DC bias only).
       </figcaption>
     </figure>
+    {% endif %}
 
     {% if error_message %}
     <p class="error" role="alert">{{ error_message }}</p>
     {% endif %}
 
+    <form method="get" class="mode-form">
+      <div class="field">
+        <label for="mode">Circuit mode</label>
+        <select id="mode" name="mode">
+          {% for value, label in mode_labels.items() %}
+          <option value="{{ value }}"{% if value == mode %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="actions">
+        <button type="submit">Load mode</button>
+      </div>
+    </form>
+
     <form method="post" class="bias-form">
+      <input type="hidden" name="mode" value="{{ mode }}">
+
       <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
         <label for="vcc">VCC (V)</label>
         <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
                placeholder="12" value="{{ form.get('vcc', '') }}" required>
       </div>
+
+      {% if mode == 'divider' %}
       <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
         <label for="r1">R1 (kΩ)</label>
         <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
@@ -108,16 +129,28 @@
         <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
                placeholder="10" value="{{ form.get('r2', '') }}" required>
       </div>
+      {% else %}
+      <div class="field{% if error_field == 'rb' %} invalid{% endif %}">
+        <label for="rb">RB (kΩ)</label>
+        <input id="rb" name="rb" type="number" step="any" inputmode="decimal"
+               placeholder="470" value="{{ form.get('rb', '') }}" required>
+      </div>
+      {% endif %}
+
       <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
         <label for="rc">RC (kΩ)</label>
         <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
                placeholder="4.7" value="{{ form.get('rc', '') }}" required>
       </div>
+
+      {% if mode == 'divider' or mode == 'emitter' %}
       <div class="field{% if error_field == 're' %} invalid{% endif %}">
         <label for="re">RE (kΩ)</label>
         <input id="re" name="re" type="number" step="any" inputmode="decimal"
                placeholder="1" value="{{ form.get('re', '') }}" required>
       </div>
+      {% endif %}
+
       <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
         <label for="beta">beta</label>
         <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
@@ -147,7 +180,9 @@
       <table class="quantity-table">
         <caption>Operating point</caption>
         <tbody>
+          {% if mode == 'divider' %}
           <tr><th scope="row">VBB</th><td>{{ result.vbb|volts }}</td></tr>
+          {% endif %}
           <tr><th scope="row">RB</th><td>{{ result.rb|kilohms }}</td></tr>
           <tr><th scope="row">VB</th><td>{{ result.vb|volts }}</td></tr>
           <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td></tr>
@@ -159,6 +194,7 @@
         </tbody>
       </table>
 
+      {% if mode == 'divider' and approx %}
       <h3>Independent cross-check</h3>
       <table class="comparison-table">
         <caption>Exact solution versus beta-independent approximation</caption>
@@ -205,11 +241,14 @@
       {% if approx_note %}
       <p class="note">{{ approx_note }}</p>
       {% endif %}
+      {% endif %}
     </section>
     {% endif %}
 
     <section class="formulas">
       <h2>Formulas</h2>
+
+      {% if mode == 'divider' %}
       <p>Exact solution:</p>
       <pre>VBB = VCC * R2 / (R1 + R2)
 RB  = R1 * R2 / (R1 + R2)
@@ -229,6 +268,27 @@ VCE ~= VCC - IC * (RC + RE)</pre>
         Valid when beta * RE / RB &ge; 10. The approximation assumes the
         active region and is shown for comparison only.
       </p>
+      {% elif mode == 'fixed' %}
+      <p>Fixed bias:</p>
+      <pre>IB  = (VCC - VBE) / RB
+IC  = beta * IB
+IE  = (beta + 1) * IB
+VE  = 0
+VB  = VE + VBE
+VC  = VCC - IC * RC
+VCE = VC - VE</pre>
+      <p class="meta">DC analysis only, assuming NPN forward-active operation.</p>
+      {% elif mode == 'emitter' %}
+      <p>Emitter bias:</p>
+      <pre>IB  = (VCC - VBE) / (RB + (beta + 1) * RE)
+IC  = beta * IB
+IE  = (beta + 1) * IB
+VE  = IE * RE
+VB  = VE + VBE
+VC  = VCC - IC * RC
+VCE = VC - VE</pre>
+      <p class="meta">DC analysis only, assuming NPN forward-active operation.</p>
+      {% endif %}
     </section>
   </main>
 </body>

@@ -97,7 +97,8 @@ body {
   color: var(--muted);
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   padding: 0.55rem 0.65rem;
   border: 1px solid #bcccdc;
@@ -107,15 +108,38 @@ body {
   font: inherit;
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);
 }
 
-.field.invalid input {
+.field.invalid input,
+.field.invalid select {
   border-color: var(--error);
   background: #fff5f5;
+}
+
+.mode-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.mode-form .field {
+  flex: 1 1 220px;
+  min-width: 220px;
+}
+
+.mode-form .actions {
+  grid-column: auto;
 }
 
 .actions {
