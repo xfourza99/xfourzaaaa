@@ -115,6 +115,21 @@ body {
   border-color: var(--accent);
 }
 
+.field.checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.field.checkbox input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .field.invalid input,
 .field.invalid select {
   border-color: var(--error);
@@ -221,6 +236,10 @@ table {
   border-collapse: collapse;
   margin-bottom: 1rem;
   font-variant-numeric: tabular-nums;
+}
+
+.results .spice-table {
+  margin-top: 0.75rem;
 }
 
 caption {

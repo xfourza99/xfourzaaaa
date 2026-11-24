@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT CE DC Bias Calculator</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="card">
+    <header class="page-header">
+      <h1>BJT Common-Emitter DC Bias</h1>
+      <p class="subtitle">
+        Voltage-divider, fixed-bias and emitter-bias operating points for
+        ENG29 2121. DC analysis only.
+      </p>
+    </header>
+
+    
+    <figure class="schematic">
+      <svg viewBox="0 0 640 420" role="img"
+           aria-labelledby="bias-circuit-title bias-circuit-desc"
+           xmlns="http://www.w3.org/2000/svg">
+        <title id="bias-circuit-title">Voltage-divider biased NPN common-emitter circuit</title>
+        <desc id="bias-circuit-desc">VCC feeds R1 and RC. R1 and R2 form the base voltage divider, RC is the collector resistor, RE is the emitter resistor, and Q1 is the NPN transistor. VB, VC and VE mark the base, collector and emitter voltages.</desc>
+        <defs>
+          <marker id="bias-circuit-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2933"/>
+          </marker>
+        </defs>
+        <g fill="none" stroke="#1f2933" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+          <line x1="190" y1="50" x2="345" y2="50"/>
+          <line x1="267" y1="50" x2="267" y2="32"/>
+
+          <line x1="190" y1="50" x2="190" y2="90"/>
+          <rect x="178" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="190" y1="150" x2="190" y2="220"/>
+
+          <line x1="190" y1="220" x2="190" y2="270"/>
+          <rect x="178" y="270" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="190" y1="330" x2="190" y2="380"/>
+
+          <line x1="190" y1="220" x2="300" y2="220"/>
+          <line x1="300" y1="195" x2="300" y2="245"/>
+
+          <line x1="300" y1="205" x2="345" y2="180"/>
+          <line x1="345" y1="180" x2="345" y2="150"/>
+
+          <line x1="345" y1="50" x2="345" y2="90"/>
+          <rect x="333" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="345" y1="150" x2="345" y2="180"/>
+
+          <line x1="300" y1="235" x2="340" y2="257"
+                marker-end="url(#bias-circuit-arrow)"/>
+          <line x1="340" y1="257" x2="345" y2="260"/>
+
+          <line x1="345" y1="260" x2="345" y2="300"/>
+          <rect x="333" y="300" width="24" height="60" rx="3" fill="#ffffff"/>
+          <line x1="345" y1="360" x2="345" y2="380"/>
+
+          <line x1="190" y1="380" x2="345" y2="380"/>
+          <line x1="267" y1="380" x2="267" y2="392"/>
+          <line x1="251" y1="392" x2="283" y2="392"/>
+          <line x1="258" y1="398" x2="276" y2="398"/>
+          <line x1="264" y1="404" x2="270" y2="404"/>
+        </g>
+        <g class="node">
+          <circle cx="267" cy="50" r="4"/>
+          <circle cx="190" cy="220" r="4"/>
+          <circle cx="345" cy="180" r="4"/>
+          <circle cx="345" cy="260" r="4"/>
+        </g>
+        <g class="diagram-label">
+          <text x="267" y="24" text-anchor="middle">VCC</text>
+          <text x="166" y="125" text-anchor="end">R1</text>
+          <text x="166" y="305" text-anchor="end">R2</text>
+          <text x="372" y="125">RC</text>
+          <text x="372" y="335">RE</text>
+          <text x="360" y="228">Q1</text>
+          <text x="360" y="244" class="small">NPN</text>
+          <text x="204" y="210">VB</text>
+          <text x="356" y="172">VC</text>
+          <text x="356" y="282">VE</text>
+        </g>
+      </svg>
+      <figcaption>
+        Voltage-divider bias network for an NPN common-emitter stage (DC bias only).
+      </figcaption>
+    </figure>
+    
+
+    
+
+    <form method="get" class="mode-form">
+      <div class="field">
+        <label for="mode">Circuit mode</label>
+        <select id="mode" name="mode">
+          
+          <option value="divider" selected>Voltage Divider</option>
+          
+          <option value="fixed">Fixed Bias</option>
+          
+          <option value="emitter">Emitter Bias</option>
+          
+        </select>
+      </div>
+      <div class="actions">
+        <button type="submit">Load mode</button>
+      </div>
+    </form>
+
+    <form method="post" class="bias-form">
+      <input type="hidden" name="mode" value="divider">
+
+      <div class="field">
+        <label for="vcc">VCC (V)</label>
+        <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
+               placeholder="12" value="12" required>
+      </div>
+
+      
+      <div class="field">
+        <label for="r1">R1 (kΩ)</label>
+        <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
+               placeholder="47" value="47" required>
+      </div>
+      <div class="field">
+        <label for="r2">R2 (kΩ)</label>
+        <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
+               placeholder="10" value="10" required>
+      </div>
+      
+
+      <div class="field">
+        <label for="rc">RC (kΩ)</label>
+        <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
+               placeholder="4.7" value="4.7" required>
+      </div>
+
+      
+      <div class="field">
+        <label for="re">RE (kΩ)</label>
+        <input id="re" name="re" type="number" step="any" inputmode="decimal"
+               placeholder="1" value="1" required>
+      </div>
+      
+
+      <div class="field">
+        <label for="beta">beta</label>
+        <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
+               placeholder="150" value="150" required>
+      </div>
+      <div class="field">
+        <label for="vbe">VBE (V)</label>
+        <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
+               placeholder="0.7" value="0.7" required>
+      </div>
+      
+      <div class="field checkbox">
+        <label>
+          <input type="checkbox" name="simulate" value="1"
+                 checked>
+          Also run ngspice (.op / .ac / .tran)
+        </label>
+      </div>
+      
+      <div class="actions">
+        <button type="submit">Calculate</button>
+      </div>
+    </form>
+
+    
+    <section class="results" aria-live="polite">
+      <div class="results-header">
+        <h2>DC operating point</h2>
+        <span class="badge badge-active">Active</span>
+      </div>
+
+      
+
+      <table class="quantity-table">
+        <caption>Operating point</caption>
+        <tbody>
+          
+          <tr><th scope="row">VBB</th><td>2.105 V</td></tr>
+          
+          <tr><th scope="row">RB</th><td>8.246 kΩ</td></tr>
+          <tr><th scope="row">VB</th><td>2.032 V</td></tr>
+          <tr><th scope="row">VE</th><td>1.332 V</td></tr>
+          <tr><th scope="row">VC</th><td>5.779 V</td></tr>
+          <tr><th scope="row">IB</th><td>8.82 µA</td></tr>
+          <tr><th scope="row">IC</th><td>1.324 mA</td></tr>
+          <tr><th scope="row">IE</th><td>1.332 mA</td></tr>
+          <tr><th scope="row">VCE</th><td>4.446 V</td></tr>
+        </tbody>
+      </table>
+
+      
+      <h3>Independent cross-check</h3>
+      <table class="comparison-table">
+        <caption>Exact solution versus beta-independent approximation</caption>
+        <thead>
+          <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">VE</th>
+            <td>1.332 V</td>
+            <td>1.405 V</td>
+          </tr>
+          <tr>
+            <th scope="row">IC</th>
+            <td>1.324 mA</td>
+            <td>1.405 mA</td>
+          </tr>
+          <tr>
+            <th scope="row">VCE</th>
+            <td>4.446 V</td>
+            <td>3.990 V</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="meta">
+        beta&middot;RE / RB = 18.2
+        
+          
+        &mdash; approximation is valid (ratio &ge; 10).
+          
+        
+      </p>
+      <p class="meta">
+        IC difference:
+        6.2%
+      </p>
+
+      
+      
+
+      
+      <h3>ngspice cross-check</h3>      
+      <table class="comparison-table spice-table">
+        <caption>Analytical solution versus the ngspice operating point</caption>
+        <thead>
+          <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">ngspice</th><th scope="col">Difference</th></tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <th scope="row">VB</th>
+            <td>2.032 V</td>
+            <td>2.033 V</td>
+            <td>0.0%</td>
+          </tr>
+          
+          <tr>
+            <th scope="row">VE</th>
+            <td>1.332 V</td>
+            <td>1.371 V</td>
+            <td>2.9%</td>
+          </tr>
+          
+          <tr>
+            <th scope="row">VC</th>
+            <td>5.779 V</td>
+            <td>5.599 V</td>
+            <td>3.1%</td>
+          </tr>
+          
+          <tr>
+            <th scope="row">IC</th>
+            <td>1.324 mA</td>
+            <td>1.363 mA</td>
+            <td>2.9%</td>
+          </tr>
+          
+          <tr>
+            <th scope="row">VCE</th>
+            <td>4.446 V</td>
+            <td>4.228 V</td>
+            <td>4.9%</td>
+          </tr>
+          
+        </tbody>
+      </table>
+
+      <table class="quantity-table spice-table">
+        <caption>AC and transient probe (1 kHz, 10 mV input)</caption>
+        <tbody>
+          <tr><th scope="row">Gain at 1 kHz</th><td>222.4 V/V (46.9 dB)</td></tr>
+          <tr><th scope="row">Lower &minus;3 dB corner</th><td>100 Hz</td></tr>
+          <tr><th scope="row">Upper &minus;3 dB corner</th><td>&gt; 1 MHz (beyond sweep)</td></tr>
+          <tr><th scope="row">Output swing</th><td>4.39 V peak-to-peak</td></tr>
+          <tr><th scope="row">Transient gain</th><td>219.6 V/V</td></tr>
+          <tr><th scope="row">Clipping</th><td>No</td></tr>
+        </tbody>
+      </table>
+
+      <p class="meta">
+        Simulated VBE = 0.662 V, entered VBE = 0.7 V.
+      </p>
+      
+      <p class="note">ngspice solves the transistor model self-consistently, so its base-emitter voltage differs from the fixed VBE the analytical solution assumes. The IC and VCE differences above are expected, not an error.</p>
+      
+      
+      
+    </section>
+    
+
+    <section class="formulas">
+      <h2>Formulas</h2>
+
+      
+      <p>Exact solution:</p>
+      <pre>VBB = VCC * R2 / (R1 + R2)
+RB  = R1 * R2 / (R1 + R2)
+IB  = (VBB - VBE) / (RB + (1 + beta) * RE)
+IC  = beta * IB
+IE  = (1 + beta) * IB
+VE  = IE * RE
+VC  = VCC - IC * RC
+VB  = VBE + VE
+VCE = VC - VE</pre>
+      <p>Beta-independent approximation:</p>
+      <pre>VE  ~= VBB - VBE
+IE  ~= VE / RE
+IC  ~= IE
+VCE ~= VCC - IC * (RC + RE)</pre>
+      <p class="meta">
+        Valid when beta * RE / RB &ge; 10. The approximation assumes the
+        active region and is shown for comparison only.
+      </p>
+      
+    </section>
+  </main>
+</body>
+</html>

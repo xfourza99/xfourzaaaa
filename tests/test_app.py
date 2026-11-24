@@ -1,12 +1,27 @@
 import unittest
+from unittest.mock import patch
 
 from app import create_app, parse_form
+from engineering.ngspice import (
+    AcResult,
+    OpResult,
+    SimulationError,
+    SpiceResult,
+    TranResult,
+)
 
 FORM = {
     "mode": "divider",
     "vcc": "12", "r1": "47", "r2": "10", "rc": "4.7",
     "re": "1", "beta": "150", "vbe": "0.7",
 }
+
+FAKE_SPICE = SpiceResult(
+    op=OpResult(vb=2.033, vc=5.599, ve=1.371, ic=1.3627e-3, ib=8.77e-6),
+    ac=AcResult(gain_db=46.94, gain=222.41, f_low=100.0, f_high=None),
+    tran=TranResult(vpp_out=4.393, gain=219.6, clipped=False),
+    executable="ngspice_con",
+)
 
 
 class TestParseForm(unittest.TestCase):
@@ -95,3 +110,51 @@ class TestRoutes(unittest.TestCase):
             ">RE<", ">Q1<",
         ):
             self.assertIn(label, page)
+
+
+class TestSimulationRoutes(unittest.TestCase):
+    def setUp(self):
+        self.client = create_app().test_client()
+
+    def test_divider_form_offers_simulation_checkbox(self):
+        page = self.client.get("/").get_data(as_text=True)
+        self.assertIn('name="simulate"', page)
+
+    def test_fixed_form_has_no_simulation_checkbox(self):
+        page = self.client.get("/?mode=fixed").get_data(as_text=True)
+        self.assertNotIn('name="simulate"', page)
+
+    def test_divider_without_simulation_has_no_spice_section(self):
+        page = self.client.post("/", data=FORM).get_data(as_text=True)
+        self.assertNotIn("ngspice cross-check", page)
+
+    def test_simulation_results_render_the_comparison(self):
+        with patch("app.simulate_divider", return_value=FAKE_SPICE):
+            page = self.client.post(
+                "/", data={**FORM, "simulate": "1"}
+            ).get_data(as_text=True)
+        self.assertIn("ngspice cross-check", page)
+        self.assertIn("Gain at 1 kHz", page)
+        self.assertIn("222.4", page)
+        self.assertIn("Simulated VBE", page)
+
+    def test_simulation_failure_degrades_gracefully(self):
+        with patch(
+            "app.simulate_divider",
+            side_effect=SimulationError("ngspice was not found."),
+        ):
+            response = self.client.post("/", data={**FORM, "simulate": "1"})
+        page = response.get_data(as_text=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ngspice was not found.", page)
+        self.assertIn("1.324", page)
+
+    def test_simulation_is_ignored_for_fixed_mode(self):
+        data = {
+            "mode": "fixed", "vcc": "12", "rb": "470", "rc": "4.7",
+            "beta": "150", "vbe": "0.7", "simulate": "1",
+        }
+        with patch("app.simulate_divider") as simulate:
+            page = self.client.post("/", data=data).get_data(as_text=True)
+        simulate.assert_not_called()
+        self.assertNotIn("ngspice cross-check", page)

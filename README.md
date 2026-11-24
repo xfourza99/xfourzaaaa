@@ -4,7 +4,8 @@ A small Flask application for the ENG29 2121 lab. It computes DC operating
 points for voltage-divider, fixed-bias and emitter-bias NPN common-emitter
 stages, validates the bias values, labels the region, and shows a
 beta-independent approximation next to the voltage-divider exact solution as
-an independent cross-check. The analysis is DC only.
+an independent cross-check. The analytical path is DC only; an optional
+ngspice cross-check adds `.op`, `.ac` and `.tran` for the divider stage.
 
 ## Circuit
 
@@ -14,6 +15,7 @@ an independent cross-check. The analysis is DC only.
 
 - Python 3.12
 - Flask (installed from `requirements.txt`)
+- Optional: ngspice 47+ (`ngspice_con`) for the Lab 4 cross-check
 
 ## Setup and run
 
@@ -160,10 +162,34 @@ ratio is at least 10, and the percent difference in `IC` is shown alongside.
 - exact: `IC ≈ 1.324 mA`, `VCE ≈ 4.446 V`, active
 - approximation: `IC ≈ 1.405 mA`, `VCE = 3.99 V`, about `6.2%` difference
 
+## ngspice cross-check (Lab 4)
+
+Tick **Also run ngspice** on the Voltage Divider form to simulate the same
+stage and compare it with the analytical solution.
+
+Requirements: `ngspice_con` 47 or newer. Verified with `ngspice-47_64.7z`
+installed at `C:\Spice64` with `C:\Spice64\bin` on the user PATH. If ngspice is
+missing, the page still shows the analytical result and prints an install hint
+instead of failing.
+
+| Analysis | Setup | Reported |
+|----------|-------|----------|
+| `.op` | The divider stage with the entered values | VB, VE, VC, IC, VCE beside the analytical values, with percent difference |
+| `.ac` | 1 V AC probe through a 10 µF coupling capacitor, 10 Hz–1 MHz | Gain at 1 kHz, lower and upper −3 dB corners |
+| `.tran` | 10 mV, 1 kHz sine, 3 ms | Output swing, transient gain, clipping flag |
+
+The model card is `NPN(IS=1e-14 BF=beta VAF=100 CJC=3p CJE=10p TF=0.3n)`, so
+`beta` is honoured but the base-emitter voltage is solved by the model rather
+than fixed at the entered VBE. That is why the comparison shows a few percent
+difference: for the worked example the analytical solution assumes
+`VBE = 0.70 V` while ngspice settles at `VBE ≈ 0.662 V`, giving `IC` 1.324 vs
+1.363 mA and `VCE` 4.446 vs 4.228 V. This is expected and is stated on the page.
+
 ## Scope
 
-DC bias only. No AC analysis, transient analysis, schematic editor or FET
-support.
+The analytical calculators are DC bias only. The optional ngspice cross-check
+(Lab 4) adds `.op`, `.ac` and `.tran` for the voltage-divider stage and never
+changes the analytical result. No schematic editor or FET support.
 
 ## Project layout
 
@@ -171,9 +197,10 @@ support.
 app.py                  Flask routes, mode dispatch, form parsing and filters
 electrical.py           fixed-bias, emitter-bias and voltage-divider calculations
 engineering/bjt.py      voltage-divider approximation and legacy exact module
+engineering/ngspice.py  optional .op/.ac/.tran cross-check via ngspice_con
 templates/index.html    single-page form and results
 static/style.css        stylesheet
-tests/                  engineering and route tests
+tests/                  engineering, route and simulator tests
 docs/validation.md      A1-A5 browser validation record
 docs/evidence/          full-page screenshots for each validation case
 docs/images/            circuit image used by this README

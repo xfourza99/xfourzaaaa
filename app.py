@@ -21,6 +21,7 @@ from engineering.bjt import (
     analyze_approximate,
     ic_difference_percent,
 )
+from engineering.ngspice import SimulationError, simulate_divider
 
 MODE_LABELS = {
     MODE_DIVIDER: "Voltage Divider",
@@ -30,6 +31,12 @@ MODE_LABELS = {
 
 APPROX_NOTE = (
     "The approximation assumes the active region; it is not meaningful here."
+)
+
+SPICE_NOTE = (
+    "ngspice solves the transistor model self-consistently, so its "
+    "base-emitter voltage differs from the fixed VBE the analytical solution "
+    "assumes. The IC and VCE differences above are expected, not an error."
 )
 
 
@@ -55,6 +62,32 @@ def parse_form(form, mode: str) -> dict[str, float]:
     return values
 
 
+def _spice_rows(result: dict, spice) -> list[dict]:
+    """Pair analytical and simulated quantities for the comparison table."""
+    rows: list[dict] = []
+
+    def add(label: str, unit: str, analytical: float, simulated: float) -> None:
+        delta = None
+        if analytical:
+            delta = abs(analytical - simulated) / abs(analytical) * 100.0
+        rows.append(
+            {
+                "label": label,
+                "unit": unit,
+                "analytical": analytical,
+                "spice": simulated,
+                "delta": delta,
+            }
+        )
+
+    add("VB", "v", result["vb"], spice.op.vb)
+    add("VE", "v", result["ve"], spice.op.ve)
+    add("VC", "v", result["vc"], spice.op.vc)
+    add("IC", "a", result["ic"], spice.op.ic)
+    add("VCE", "v", result["vce"], spice.op.vce)
+    return rows
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
 
@@ -66,6 +99,10 @@ def create_app() -> Flask:
     def render_page(**context):
         context.setdefault("mode", MODE_DIVIDER)
         context.setdefault("mode_labels", MODE_LABELS)
+        context.setdefault("spice", None)
+        context.setdefault("spice_rows", None)
+        context.setdefault("spice_error", None)
+        context.setdefault("spice_note", None)
         return render_template("index.html", **context)
 
     @app.route("/", methods=["GET", "POST"])
@@ -104,6 +141,11 @@ def create_app() -> Flask:
             values = parse_form(request.form, mode)
             validate_inputs(mode, values)
 
+            spice = None
+            spice_rows = None
+            spice_error = None
+            spice_note = None
+
             if mode == MODE_DIVIDER:
                 result = analyze_voltage_divider(**values)
                 approx = analyze_approximate(BiasInput(**values))
@@ -111,6 +153,27 @@ def create_app() -> Flask:
                 approx_note = (
                     APPROX_NOTE if result["region"] != "active" else None
                 )
+                if request.form.get("simulate"):
+                    try:
+                        spice = simulate_divider(
+                            vcc=values["vcc"],
+                            r1=values["r1"],
+                            r2=values["r2"],
+                            rc=values["rc"],
+                            re=values["re"],
+                            beta=values["beta"],
+                        )
+                        spice_rows = _spice_rows(result, spice)
+                        spice_note = SPICE_NOTE
+                        if result["region"] == "saturation":
+                            spice_note += (
+                                " The analytical VCE is pinned at the 0.2 V"
+                                " saturation convention, while the model"
+                                " resolves its own, usually lower, saturation"
+                                " voltage."
+                            )
+                    except SimulationError as error:
+                        spice_error = str(error)
             elif mode == MODE_FIXED:
                 result = analyze_fixed_bias(**values)
                 approx = None
@@ -146,6 +209,10 @@ def create_app() -> Flask:
             approx=approx,
             ic_diff=ic_diff,
             approx_note=approx_note,
+            spice=spice,
+            spice_rows=spice_rows,
+            spice_error=spice_error,
+            spice_note=spice_note,
             error_field=None,
             error_message=None,
         )

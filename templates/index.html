@@ -161,6 +161,15 @@
         <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
                placeholder="0.7" value="{{ form.get('vbe', '') }}" required>
       </div>
+      {% if mode == 'divider' %}
+      <div class="field checkbox">
+        <label>
+          <input type="checkbox" name="simulate" value="1"
+                 {% if form.get('simulate') %}checked{% endif %}>
+          Also run ngspice (.op / .ac / .tran)
+        </label>
+      </div>
+      {% endif %}
       <div class="actions">
         <button type="submit">Calculate</button>
       </div>
@@ -240,6 +249,48 @@
 
       {% if approx_note %}
       <p class="note">{{ approx_note }}</p>
+      {% endif %}
+      {% endif %}
+
+      {% if mode == 'divider' and (spice or spice_error) %}
+      <h3>ngspice cross-check</h3>      {% if spice_error %}
+      <p class="warning">{{ spice_error }}</p>
+      {% elif spice %}
+      <table class="comparison-table spice-table">
+        <caption>Analytical solution versus the ngspice operating point</caption>
+        <thead>
+          <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">ngspice</th><th scope="col">Difference</th></tr>
+        </thead>
+        <tbody>
+          {% for row in spice_rows %}
+          <tr>
+            <th scope="row">{{ row.label }}</th>
+            <td>{% if row.unit == 'v' %}{{ row.analytical|volts }}{% else %}{{ row.analytical|milliamps }}{% endif %}</td>
+            <td>{% if row.unit == 'v' %}{{ row.spice|volts }}{% else %}{{ row.spice|milliamps }}{% endif %}</td>
+            <td>{% if row.delta is not none %}{{ "%.1f"|format(row.delta) }}%{% else %}n/a{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="quantity-table spice-table">
+        <caption>AC and transient probe (1 kHz, 10 mV input)</caption>
+        <tbody>
+          <tr><th scope="row">Gain at 1 kHz</th><td>{{ "%.1f"|format(spice.ac.gain) }} V/V ({{ "%.1f"|format(spice.ac.gain_db) }} dB)</td></tr>
+          <tr><th scope="row">Lower &minus;3 dB corner</th><td>{% if spice.ac.f_low is not none %}{{ "%.0f"|format(spice.ac.f_low) }} Hz{% else %}not reached in sweep{% endif %}</td></tr>
+          <tr><th scope="row">Upper &minus;3 dB corner</th><td>{% if spice.ac.f_high is not none %}{{ "%.0f"|format(spice.ac.f_high) }} Hz{% else %}&gt; 1 MHz (beyond sweep){% endif %}</td></tr>
+          <tr><th scope="row">Output swing</th><td>{{ "%.2f"|format(spice.tran.vpp_out) }} V peak-to-peak</td></tr>
+          <tr><th scope="row">Transient gain</th><td>{{ "%.1f"|format(spice.tran.gain) }} V/V</td></tr>
+          <tr><th scope="row">Clipping</th><td>{% if spice.tran.clipped %}Yes &mdash; limited by the supply rails{% else %}No{% endif %}</td></tr>
+        </tbody>
+      </table>
+
+      <p class="meta">
+        Simulated VBE = {{ spice.op.vbe|volts }}, entered VBE = {{ form.get('vbe') }} V.
+      </p>
+      {% if spice_note %}
+      <p class="note">{{ spice_note }}</p>
+      {% endif %}
       {% endif %}
       {% endif %}
     </section>
