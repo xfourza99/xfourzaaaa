@@ -21,7 +21,13 @@ from engineering.bjt import (
     analyze_approximate,
     ic_difference_percent,
 )
-from engineering.ngspice import SimulationError, simulate_divider
+from engineering.ngspice import (
+    TRAN_INPUT_AMPLITUDE_V,
+    TRAN_STOP_S,
+    SimulationError,
+    simulate_divider,
+)
+from engineering.plots import bode_svg, dc_compare_svg, waveforms_svg
 
 MODE_LABELS = {
     MODE_DIVIDER: "Voltage Divider",
@@ -103,6 +109,9 @@ def create_app() -> Flask:
         context.setdefault("spice_rows", None)
         context.setdefault("spice_error", None)
         context.setdefault("spice_note", None)
+        context.setdefault("plots", None)
+        context.setdefault("spice_input_mv", TRAN_INPUT_AMPLITUDE_V * 1e3)
+        context.setdefault("spice_time_ms", TRAN_STOP_S * 1e3)
         return render_template("index.html", **context)
 
     @app.route("/", methods=["GET", "POST"])
@@ -145,6 +154,7 @@ def create_app() -> Flask:
             spice_rows = None
             spice_error = None
             spice_note = None
+            plots = None
 
             if mode == MODE_DIVIDER:
                 result = analyze_voltage_divider(**values)
@@ -165,6 +175,11 @@ def create_app() -> Flask:
                         )
                         spice_rows = _spice_rows(result, spice)
                         spice_note = SPICE_NOTE
+                        plots = {
+                            "dc": dc_compare_svg(spice_rows),
+                            "ac": bode_svg(spice.ac),
+                            "tran": waveforms_svg(spice.tran),
+                        }
                         if result["region"] == "saturation":
                             spice_note += (
                                 " The analytical VCE is pinned at the 0.2 V"
@@ -213,6 +228,7 @@ def create_app() -> Flask:
             spice_rows=spice_rows,
             spice_error=spice_error,
             spice_note=spice_note,
+            plots=plots,
             error_field=None,
             error_message=None,
         )

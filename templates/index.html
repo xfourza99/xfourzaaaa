@@ -3,302 +3,371 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BJT CE DC Bias Calculator</title>
+  <title>CE Amplifier Lab</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="card">
-    <header class="page-header">
-      <h1>BJT Common-Emitter DC Bias</h1>
-      <p class="subtitle">
-        Voltage-divider, fixed-bias and emitter-bias operating points for
-        ENG29 2121. DC analysis only.
-      </p>
-    </header>
+  <header class="topbar">
+    <h1>CE Amplifier Lab</h1>
+    <p class="topbar-meta">DC Bias / AC / Transient</p>
+  </header>
 
-    {% if mode == 'divider' %}
-    <figure class="schematic">
-      <svg viewBox="0 0 640 420" role="img"
-           aria-labelledby="bias-circuit-title bias-circuit-desc"
-           xmlns="http://www.w3.org/2000/svg">
-        <title id="bias-circuit-title">Voltage-divider biased NPN common-emitter circuit</title>
-        <desc id="bias-circuit-desc">VCC feeds R1 and RC. R1 and R2 form the base voltage divider, RC is the collector resistor, RE is the emitter resistor, and Q1 is the NPN transistor. VB, VC and VE mark the base, collector and emitter voltages.</desc>
-        <defs>
-          <marker id="bias-circuit-arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2933"/>
-          </marker>
-        </defs>
-        <g fill="none" stroke="#1f2933" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round">
-          <line x1="190" y1="50" x2="345" y2="50"/>
-          <line x1="267" y1="50" x2="267" y2="32"/>
+  <main class="dashboard">
+    <div class="dashboard-grid">
+      <section class="panel column-controls" aria-labelledby="controls-title">
+        <h2 id="controls-title">Circuit &amp; Parameters</h2>
 
-          <line x1="190" y1="50" x2="190" y2="90"/>
-          <rect x="178" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
-          <line x1="190" y1="150" x2="190" y2="220"/>
+        {% if mode == 'divider' %}
+        <figure class="schematic">
+          <svg viewBox="0 0 480 320" role="img"
+               aria-labelledby="bias-circuit-title bias-circuit-desc"
+               xmlns="http://www.w3.org/2000/svg">
+            <title id="bias-circuit-title">Voltage-divider biased NPN common-emitter amplifier</title>
+            <desc id="bias-circuit-desc">VCC feeds R1, R2 and RC. R1 and R2 set the base voltage, RC is the collector resistor, RE is the emitter resistor, and Q1 is the NPN transistor. Vin couples through Cin to the base; Cout couples the collector to RL.</desc>
+            <defs>
+              <marker id="bias-circuit-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                      markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f2933"/>
+              </marker>
+            </defs>
+            <g fill="none" stroke="#1f2933" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+              <line x1="140" y1="36" x2="340" y2="36"/>
 
-          <line x1="190" y1="220" x2="190" y2="270"/>
-          <rect x="178" y="270" width="24" height="60" rx="3" fill="#ffffff"/>
-          <line x1="190" y1="330" x2="190" y2="380"/>
+              <line x1="160" y1="36" x2="160" y2="62"/>
+              <rect x="151" y="62" width="18" height="48" rx="2" fill="#ffffff"/>
+              <line x1="160" y1="110" x2="160" y2="155"/>
+              <line x1="160" y1="155" x2="160" y2="205"/>
+              <rect x="151" y="205" width="18" height="48" rx="2" fill="#ffffff"/>
+              <line x1="160" y1="253" x2="160" y2="286"/>
+              <line x1="150" y1="286" x2="170" y2="286"/>
+              <line x1="154" y1="292" x2="166" y2="292"/>
+              <line x1="158" y1="298" x2="162" y2="298"/>
 
-          <line x1="190" y1="220" x2="300" y2="220"/>
-          <line x1="300" y1="195" x2="300" y2="245"/>
+              <line x1="160" y1="155" x2="226" y2="155"/>
+              <line x1="230" y1="133" x2="230" y2="177"/>
+              <line x1="230" y1="141" x2="276" y2="112"/>
+              <line x1="276" y1="112" x2="340" y2="112"/>
+              <line x1="230" y1="169" x2="276" y2="198"/>
+              <line x1="276" y1="198" x2="340" y2="198"/>
+              <line x1="258" y1="180" x2="268" y2="190" marker-end="url(#bias-circuit-arrow)"/>
 
-          <line x1="300" y1="205" x2="345" y2="180"/>
-          <line x1="345" y1="180" x2="345" y2="150"/>
+              <line x1="340" y1="36" x2="340" y2="62"/>
+              <rect x="331" y="62" width="18" height="48" rx="2" fill="#ffffff"/>
+              <line x1="340" y1="110" x2="340" y2="112"/>
 
-          <line x1="345" y1="50" x2="345" y2="90"/>
-          <rect x="333" y="90" width="24" height="60" rx="3" fill="#ffffff"/>
-          <line x1="345" y1="150" x2="345" y2="180"/>
+              <line x1="340" y1="198" x2="340" y2="218"/>
+              <rect x="331" y="218" width="18" height="48" rx="2" fill="#ffffff"/>
+              <line x1="340" y1="266" x2="340" y2="286"/>
+              <line x1="330" y1="286" x2="350" y2="286"/>
+              <line x1="334" y1="292" x2="346" y2="292"/>
+              <line x1="338" y1="298" x2="342" y2="298"/>
 
-          <line x1="300" y1="235" x2="340" y2="257"
-                marker-end="url(#bias-circuit-arrow)"/>
-          <line x1="340" y1="257" x2="345" y2="260"/>
+              <circle cx="72" cy="155" r="16" fill="#ffffff"/>
+              <path d="M 64 155 Q 68 146 72 155 T 80 155"/>
+              <line x1="72" y1="171" x2="72" y2="220"/>
+              <line x1="62" y1="220" x2="82" y2="220"/>
+              <line x1="66" y1="226" x2="78" y2="226"/>
+              <line x1="70" y1="232" x2="74" y2="232"/>
+              <line x1="88" y1="155" x2="96" y2="155"/>
+              <line x1="96" y1="143" x2="96" y2="167"/>
+              <line x1="106" y1="143" x2="106" y2="167"/>
+              <line x1="106" y1="155" x2="160" y2="155"/>
 
-          <line x1="345" y1="260" x2="345" y2="300"/>
-          <rect x="333" y="300" width="24" height="60" rx="3" fill="#ffffff"/>
-          <line x1="345" y1="360" x2="345" y2="380"/>
-
-          <line x1="190" y1="380" x2="345" y2="380"/>
-          <line x1="267" y1="380" x2="267" y2="392"/>
-          <line x1="251" y1="392" x2="283" y2="392"/>
-          <line x1="258" y1="398" x2="276" y2="398"/>
-          <line x1="264" y1="404" x2="270" y2="404"/>
-        </g>
-        <g class="node">
-          <circle cx="267" cy="50" r="4"/>
-          <circle cx="190" cy="220" r="4"/>
-          <circle cx="345" cy="180" r="4"/>
-          <circle cx="345" cy="260" r="4"/>
-        </g>
-        <g class="diagram-label">
-          <text x="267" y="24" text-anchor="middle">VCC</text>
-          <text x="166" y="125" text-anchor="end">R1</text>
-          <text x="166" y="305" text-anchor="end">R2</text>
-          <text x="372" y="125">RC</text>
-          <text x="372" y="335">RE</text>
-          <text x="360" y="228">Q1</text>
-          <text x="360" y="244" class="small">NPN</text>
-          <text x="204" y="210">VB</text>
-          <text x="356" y="172">VC</text>
-          <text x="356" y="282">VE</text>
-        </g>
-      </svg>
-      <figcaption>
-        Voltage-divider bias network for an NPN common-emitter stage (DC bias only).
-      </figcaption>
-    </figure>
-    {% endif %}
-
-    {% if error_message %}
-    <p class="error" role="alert">{{ error_message }}</p>
-    {% endif %}
-
-    <form method="get" class="mode-form">
-      <div class="field">
-        <label for="mode">Circuit mode</label>
-        <select id="mode" name="mode">
-          {% for value, label in mode_labels.items() %}
-          <option value="{{ value }}"{% if value == mode %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="actions">
-        <button type="submit">Load mode</button>
-      </div>
-    </form>
-
-    <form method="post" class="bias-form">
-      <input type="hidden" name="mode" value="{{ mode }}">
-
-      <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
-        <label for="vcc">VCC (V)</label>
-        <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
-               placeholder="12" value="{{ form.get('vcc', '') }}" required>
-      </div>
-
-      {% if mode == 'divider' %}
-      <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
-        <label for="r1">R1 (kΩ)</label>
-        <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
-               placeholder="47" value="{{ form.get('r1', '') }}" required>
-      </div>
-      <div class="field{% if error_field == 'r2' %} invalid{% endif %}">
-        <label for="r2">R2 (kΩ)</label>
-        <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
-               placeholder="10" value="{{ form.get('r2', '') }}" required>
-      </div>
-      {% else %}
-      <div class="field{% if error_field == 'rb' %} invalid{% endif %}">
-        <label for="rb">RB (kΩ)</label>
-        <input id="rb" name="rb" type="number" step="any" inputmode="decimal"
-               placeholder="470" value="{{ form.get('rb', '') }}" required>
-      </div>
-      {% endif %}
-
-      <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
-        <label for="rc">RC (kΩ)</label>
-        <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
-               placeholder="4.7" value="{{ form.get('rc', '') }}" required>
-      </div>
-
-      {% if mode == 'divider' or mode == 'emitter' %}
-      <div class="field{% if error_field == 're' %} invalid{% endif %}">
-        <label for="re">RE (kΩ)</label>
-        <input id="re" name="re" type="number" step="any" inputmode="decimal"
-               placeholder="1" value="{{ form.get('re', '') }}" required>
-      </div>
-      {% endif %}
-
-      <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
-        <label for="beta">beta</label>
-        <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
-               placeholder="150" value="{{ form.get('beta', '') }}" required>
-      </div>
-      <div class="field{% if error_field == 'vbe' %} invalid{% endif %}">
-        <label for="vbe">VBE (V)</label>
-        <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
-               placeholder="0.7" value="{{ form.get('vbe', '') }}" required>
-      </div>
-      {% if mode == 'divider' %}
-      <div class="field checkbox">
-        <label>
-          <input type="checkbox" name="simulate" value="1"
-                 {% if form.get('simulate') %}checked{% endif %}>
-          Also run ngspice (.op / .ac / .tran)
-        </label>
-      </div>
-      {% endif %}
-      <div class="actions">
-        <button type="submit">Calculate</button>
-      </div>
-    </form>
-
-    {% if result %}
-    <section class="results" aria-live="polite">
-      <div class="results-header">
-        <h2>DC operating point</h2>
-        <span class="badge badge-{{ result.region }}">{{ result.region|capitalize }}</span>
-      </div>
-
-      {% if result.warning %}
-      <p class="warning">{{ result.warning }}</p>
-      {% endif %}
-
-      <table class="quantity-table">
-        <caption>Operating point</caption>
-        <tbody>
-          {% if mode == 'divider' %}
-          <tr><th scope="row">VBB</th><td>{{ result.vbb|volts }}</td></tr>
-          {% endif %}
-          <tr><th scope="row">RB</th><td>{{ result.rb|kilohms }}</td></tr>
-          <tr><th scope="row">VB</th><td>{{ result.vb|volts }}</td></tr>
-          <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td></tr>
-          <tr><th scope="row">VC</th><td>{{ result.vc|volts }}</td></tr>
-          <tr><th scope="row">IB</th><td>{{ result.ib|microamps }}</td></tr>
-          <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td></tr>
-          <tr><th scope="row">IE</th><td>{{ result.ie|milliamps }}</td></tr>
-          <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td></tr>
-        </tbody>
-      </table>
-
-      {% if mode == 'divider' and approx %}
-      <h3>Independent cross-check</h3>
-      <table class="comparison-table">
-        <caption>Exact solution versus beta-independent approximation</caption>
-        <thead>
-          <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">VE</th>
-            <td>{{ result.ve|volts }}</td>
-            <td>{{ approx.ve|volts }}</td>
-          </tr>
-          <tr>
-            <th scope="row">IC</th>
-            <td>{{ result.ic|milliamps }}</td>
-            <td>{{ approx.ic|milliamps }}</td>
-          </tr>
-          <tr>
-            <th scope="row">VCE</th>
-            <td>{{ result.vce|volts }}</td>
-            <td>{{ approx.vce|volts }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p class="meta">
-        beta&middot;RE / RB = {{ "%.1f"|format(approx.beta_re_over_rb) }}
-        {% if result.region == 'active' %}
-          {% if approx.valid %}
-        &mdash; approximation is valid (ratio &ge; 10).
-          {% else %}
-        &mdash; approximation is outside its usual validity range (ratio &lt; 10).
-          {% endif %}
-        {% else %}
-        &mdash; not applicable outside the active region (ratio condition
-        {% if approx.valid %}met{% else %}not met{% endif %}).
+              <line x1="340" y1="112" x2="382" y2="112"/>
+              <line x1="382" y1="100" x2="382" y2="124"/>
+              <line x1="392" y1="100" x2="392" y2="124"/>
+              <line x1="392" y1="112" x2="420" y2="112"/>
+              <line x1="420" y1="112" x2="420" y2="138"/>
+              <rect x="411" y="138" width="18" height="48" rx="2" fill="#ffffff"/>
+              <line x1="420" y1="186" x2="420" y2="220"/>
+              <line x1="410" y1="220" x2="430" y2="220"/>
+              <line x1="414" y1="226" x2="426" y2="226"/>
+              <line x1="418" y1="232" x2="422" y2="232"/>
+            </g>
+            <g class="node">
+              <circle cx="160" cy="155" r="4"/>
+              <circle cx="340" cy="112" r="4"/>
+              <circle cx="340" cy="198" r="4"/>
+            </g>
+            <g class="diagram-label">
+              <text x="114" y="40" class="rail-sign">+</text>
+              <text x="126" y="40">VCC</text>
+              <text x="142" y="90" text-anchor="end">R1</text>
+              <text x="142" y="232" text-anchor="end">R2</text>
+              <text x="356" y="90">RC</text>
+              <text x="356" y="246">RE</text>
+              <text x="286" y="164">Q1</text>
+              <text x="286" y="178" class="small">NPN</text>
+              <text x="166" y="147">VB</text>
+              <text x="346" y="104">VC</text>
+              <text x="346" y="214">VE</text>
+              <text x="50" y="140">Vin</text>
+              <text x="90" y="184">Cin</text>
+              <text x="380" y="92">Cout</text>
+              <text x="408" y="106">Vout</text>
+              <text x="430" y="166">RL</text>
+              <text x="432" y="240" class="small">GND</text>
+            </g>
+          </svg>
+          <figcaption>Reference CE voltage-divider amplifier</figcaption>
+        </figure>
         {% endif %}
-      </p>
-      <p class="meta">
-        IC difference:
-        {% if ic_diff is not none %}{{ "%.1f"|format(ic_diff) }}%{% else %}n/a{% endif %}
-      </p>
 
-      {% if approx_note %}
-      <p class="note">{{ approx_note }}</p>
-      {% endif %}
-      {% endif %}
+        {% if error_message %}
+        <p class="error" role="alert">{{ error_message }}</p>
+        {% endif %}
 
-      {% if mode == 'divider' and (spice or spice_error) %}
-      <h3>ngspice cross-check</h3>      {% if spice_error %}
-      <p class="warning">{{ spice_error }}</p>
-      {% elif spice %}
-      <table class="comparison-table spice-table">
-        <caption>Analytical solution versus the ngspice operating point</caption>
-        <thead>
-          <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">ngspice</th><th scope="col">Difference</th></tr>
-        </thead>
-        <tbody>
-          {% for row in spice_rows %}
-          <tr>
-            <th scope="row">{{ row.label }}</th>
-            <td>{% if row.unit == 'v' %}{{ row.analytical|volts }}{% else %}{{ row.analytical|milliamps }}{% endif %}</td>
-            <td>{% if row.unit == 'v' %}{{ row.spice|volts }}{% else %}{{ row.spice|milliamps }}{% endif %}</td>
-            <td>{% if row.delta is not none %}{{ "%.1f"|format(row.delta) }}%{% else %}n/a{% endif %}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        <form method="get" class="mode-form">
+          <div class="field">
+            <label for="mode">Topology</label>
+            <select id="mode" name="mode">
+              {% for value, label in mode_labels.items() %}
+              <option value="{{ value }}"{% if value == mode %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="actions">
+            <button type="submit" class="button-secondary">Load mode</button>
+          </div>
+        </form>
 
-      <table class="quantity-table spice-table">
-        <caption>AC and transient probe (1 kHz, 10 mV input)</caption>
-        <tbody>
-          <tr><th scope="row">Gain at 1 kHz</th><td>{{ "%.1f"|format(spice.ac.gain) }} V/V ({{ "%.1f"|format(spice.ac.gain_db) }} dB)</td></tr>
-          <tr><th scope="row">Lower &minus;3 dB corner</th><td>{% if spice.ac.f_low is not none %}{{ "%.0f"|format(spice.ac.f_low) }} Hz{% else %}not reached in sweep{% endif %}</td></tr>
-          <tr><th scope="row">Upper &minus;3 dB corner</th><td>{% if spice.ac.f_high is not none %}{{ "%.0f"|format(spice.ac.f_high) }} Hz{% else %}&gt; 1 MHz (beyond sweep){% endif %}</td></tr>
-          <tr><th scope="row">Output swing</th><td>{{ "%.2f"|format(spice.tran.vpp_out) }} V peak-to-peak</td></tr>
-          <tr><th scope="row">Transient gain</th><td>{{ "%.1f"|format(spice.tran.gain) }} V/V</td></tr>
-          <tr><th scope="row">Clipping</th><td>{% if spice.tran.clipped %}Yes &mdash; limited by the supply rails{% else %}No{% endif %}</td></tr>
-        </tbody>
-      </table>
+        <form method="post" class="bias-form">
+          <input type="hidden" name="mode" value="{{ mode }}">
 
-      <p class="meta">
-        Simulated VBE = {{ spice.op.vbe|volts }}, entered VBE = {{ form.get('vbe') }} V.
-      </p>
-      {% if spice_note %}
-      <p class="note">{{ spice_note }}</p>
-      {% endif %}
-      {% endif %}
-      {% endif %}
-    </section>
-    {% endif %}
+          <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
+            <label for="vcc">VCC (V)</label>
+            <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
+                   placeholder="12" value="{{ form.get('vcc', '') }}" required>
+          </div>
 
-    <section class="formulas">
-      <h2>Formulas</h2>
+          {% if mode == 'divider' %}
+          <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
+            <label for="r1">R1 (kΩ)</label>
+            <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
+                   placeholder="47" value="{{ form.get('r1', '') }}" required>
+          </div>
+          <div class="field{% if error_field == 'r2' %} invalid{% endif %}">
+            <label for="r2">R2 (kΩ)</label>
+            <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
+                   placeholder="10" value="{{ form.get('r2', '') }}" required>
+          </div>
+          {% else %}
+          <div class="field{% if error_field == 'rb' %} invalid{% endif %}">
+            <label for="rb">RB (kΩ)</label>
+            <input id="rb" name="rb" type="number" step="any" inputmode="decimal"
+                   placeholder="470" value="{{ form.get('rb', '') }}" required>
+          </div>
+          {% endif %}
 
+          <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
+            <label for="rc">RC (kΩ)</label>
+            <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
+                   placeholder="4.7" value="{{ form.get('rc', '') }}" required>
+          </div>
+
+          {% if mode == 'divider' or mode == 'emitter' %}
+          <div class="field{% if error_field == 're' %} invalid{% endif %}">
+            <label for="re">RE (kΩ)</label>
+            <input id="re" name="re" type="number" step="any" inputmode="decimal"
+                   placeholder="1" value="{{ form.get('re', '') }}" required>
+          </div>
+          {% endif %}
+
+          <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
+            <label for="beta">beta</label>
+            <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
+                   placeholder="150" value="{{ form.get('beta', '') }}" required>
+          </div>
+          <div class="field{% if error_field == 'vbe' %} invalid{% endif %}">
+            <label for="vbe">VBE (V)</label>
+            <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
+                   placeholder="0.7" value="{{ form.get('vbe', '') }}" required>
+          </div>
+          {% if mode == 'divider' %}
+          <div class="field checkbox">
+            <label>
+              <input type="checkbox" name="simulate" value="1"
+                     {% if form.get('simulate') or (not form and mode == 'divider') %}checked{% endif %}>
+              Include ngspice (.op / .ac / .tran)
+            </label>
+          </div>
+          {% endif %}
+          <div class="actions">
+            <button type="submit" class="button-primary">Run Simulation</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel column-plots" aria-labelledby="plots-title">
+        <h2 id="plots-title">Simulation &amp; Plots</h2>
+
+        <section class="plot-section" id="plot-dc">
+          <div class="plot-heading"><h3>DC</h3><span>Operating point</span></div>
+          {% if plots %}
+          <div class="plot-frame">{{ plots.dc|safe }}</div>
+          <p class="plot-caption">Paired bars show the analytical value beside the simulated value.</p>
+          {% else %}
+          <p class="empty-state">Run the reference divider circuit to compare the DC operating point.</p>
+          {% endif %}
+        </section>
+
+        <section class="plot-section" id="plot-ac">
+          <div class="plot-heading"><h3>AC</h3><span>Bode response</span></div>
+          {% if plots %}
+          <div class="plot-frame">{{ plots.ac|safe }}</div>
+          <p class="plot-caption">Magnitude and phase from the simulated 10 Hz – 1 MHz sweep.</p>
+          {% else %}
+          <p class="empty-state">Run the simulation to plot gain and phase versus frequency.</p>
+          {% endif %}
+        </section>
+
+        <section class="plot-section" id="plot-tran">
+          <div class="plot-heading"><h3>Transient</h3><span>Input / output waveforms</span></div>
+          {% if plots %}
+          <div class="plot-frame">{{ plots.tran|safe }}</div>
+          <p class="plot-caption">Vin in teal (mV, right axis), Vout in orange (V, left axis), time in ms.</p>
+          {% else %}
+          <p class="empty-state">Run the simulation to plot the 1 kHz input and collector output.</p>
+          {% endif %}
+        </section>
+      </section>
+
+      <section class="panel column-results" aria-labelledby="results-title">
+        <h2 id="results-title">Engineering Results</h2>
+        <div class="results" aria-live="polite">
+          {% if result %}
+          <div class="result-card">
+            <div class="results-header">
+              <h3>DC Operating Point</h3>
+              <span class="badge badge-{{ result.region }}">{{ result.region|capitalize }}</span>
+            </div>
+
+            {% if result.warning %}
+            <p class="warning">{{ result.warning }}</p>
+            {% endif %}
+
+            {% if spice or spice_error %}<h4>ngspice cross-check</h4>{% endif %}
+            {% if spice_error %}
+            <p class="warning">{{ spice_error }}</p>
+            {% elif spice %}
+            <table class="compare-table">
+              <thead>
+                <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">SPICE</th><th scope="col">Δ</th></tr>
+              </thead>
+              <tbody>
+                {% for row in spice_rows %}
+                <tr>
+                  <th scope="row">{{ row.label }}</th>
+                  <td>{% if row.unit == 'v' %}{{ row.analytical|volts }}{% else %}{{ row.analytical|milliamps }}{% endif %}</td>
+                  <td>{% if row.unit == 'v' %}{{ row.spice|volts }}{% else %}{{ row.spice|milliamps }}{% endif %}</td>
+                  <td>{% if row.delta is not none %}{{ "%.1f"|format(row.delta) }}%{% else %}n/a{% endif %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <p class="meta">Simulated VBE = {{ spice.op.vbe|volts }}, entered VBE = {{ form.get('vbe') }} V.</p>
+            {% if spice_note %}<p class="note">{{ spice_note }}</p>{% endif %}
+            {% else %}
+            <p class="empty-state">Enable ngspice to compare the analytical operating point.</p>
+            {% endif %}
+
+            <details class="analysis-details">
+              <summary>Analytical detail</summary>
+              <table class="quantity-table">
+                <caption>Exact operating point</caption>
+                <tbody>
+                  {% if mode == 'divider' %}
+                  <tr><th scope="row">VBB</th><td>{{ result.vbb|volts }}</td></tr>
+                  {% endif %}
+                  <tr><th scope="row">RB</th><td>{{ result.rb|kilohms }}</td></tr>
+                  <tr><th scope="row">VB</th><td>{{ result.vb|volts }}</td></tr>
+                  <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td></tr>
+                  <tr><th scope="row">VC</th><td>{{ result.vc|volts }}</td></tr>
+                  <tr><th scope="row">IB</th><td>{{ result.ib|microamps }}</td></tr>
+                  <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td></tr>
+                  <tr><th scope="row">IE</th><td>{{ result.ie|milliamps }}</td></tr>
+                  <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td></tr>
+                </tbody>
+              </table>
+              {% if mode == 'divider' and approx %}
+              <h4>Independent cross-check</h4>
+              <table class="comparison-table">
+                <caption>Exact solution versus beta-independent approximation</caption>
+                <thead>
+                  <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td><td>{{ approx.ve|volts }}</td></tr>
+                  <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td><td>{{ approx.ic|milliamps }}</td></tr>
+                  <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td><td>{{ approx.vce|volts }}</td></tr>
+                </tbody>
+              </table>
+              <p class="meta">
+                beta&middot;RE / RB = {{ "%.1f"|format(approx.beta_re_over_rb) }}
+                {% if result.region == 'active' %}
+                  {% if approx.valid %}&mdash; approximation is valid (ratio &ge; 10).{% else %}&mdash; approximation is outside its usual validity range (ratio &lt; 10).{% endif %}
+                {% else %}
+                  &mdash; not applicable outside the active region (ratio condition {% if approx.valid %}met{% else %}not met{% endif %}).
+                {% endif %}
+              </p>
+              <p class="meta">
+                IC difference:
+                {% if ic_diff is not none %}{{ "%.1f"|format(ic_diff) }}%{% else %}n/a{% endif %}
+              </p>
+              {% if approx_note %}<p class="note">{{ approx_note }}</p>{% endif %}
+              {% endif %}
+            </details>
+          </div>
+
+          <div class="result-card">
+            <h3>AC Frequency Response</h3>
+            {% if spice %}
+            <table class="quantity-table">
+              <tbody>
+                <tr><th scope="row">Gain at 1 kHz</th><td>{{ "%.1f"|format(spice.ac.gain) }} V/V ({{ "%.1f"|format(spice.ac.gain_db) }} dB)</td></tr>
+                <tr><th scope="row">Phase</th><td>{{ "%.1f"|format(spice.ac.phase_deg) }}°</td></tr>
+                <tr><th scope="row">Frequency</th><td>1 kHz probe</td></tr>
+                <tr><th scope="row">Lower −3 dB</th><td>{% if spice.ac.f_low is not none %}{{ "%.0f"|format(spice.ac.f_low) }} Hz{% else %}not reached{% endif %}</td></tr>
+                <tr><th scope="row">Upper −3 dB</th><td>{% if spice.ac.f_high is not none %}{{ "%.0f"|format(spice.ac.f_high) }} Hz{% else %}&gt; 1 MHz{% endif %}</td></tr>
+              </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No AC sweep has been run.</p>
+            {% endif %}
+          </div>
+
+          <div class="result-card">
+            <h3>Transient Response</h3>
+            {% if spice %}
+            <table class="quantity-table">
+              <tbody>
+                <tr><th scope="row">Vin</th><td>{{ "%.0f"|format(spice_input_mv) }} mV peak</td></tr>
+                <tr><th scope="row">Vout</th><td>{{ "%.2f"|format(spice.tran.vpp_out) }} V pk-pk</td></tr>
+                <tr><th scope="row">Time</th><td>0 – {{ "%.1f"|format(spice_time_ms) }} ms</td></tr>
+                <tr><th scope="row">Gain</th><td>{{ "%.1f"|format(spice.tran.gain) }} V/V</td></tr>
+                <tr><th scope="row">Clipping</th><td>{% if spice.tran.clipped %}Yes — supply limited{% else %}No{% endif %}</td></tr>
+              </tbody>
+            </table>
+            {% else %}
+            <p class="empty-state">No transient analysis has been run.</p>
+            {% endif %}
+          </div>
+          {% else %}
+          <p class="empty-state">Set the parameters and run the circuit to see engineering results.</p>
+          {% endif %}
+        </div>
+
+        <div class="engine-status">
+          <span class="engine-badge{% if spice %} engine-ready{% endif %}">
+            Engine: {% if spice %}ngspice{% else %}analytical{% endif %}
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <details class="formulas panel">
+      <summary>Formulas</summary>
       {% if mode == 'divider' %}
       <p>Exact solution:</p>
       <pre>VBB = VCC * R2 / (R1 + R2)
@@ -340,7 +409,7 @@ VC  = VCC - IC * RC
 VCE = VC - VE</pre>
       <p class="meta">DC analysis only, assuming NPN forward-active operation.</p>
       {% endif %}
-    </section>
+    </details>
   </main>
 </body>
 </html>

@@ -18,8 +18,24 @@ FORM = {
 
 FAKE_SPICE = SpiceResult(
     op=OpResult(vb=2.033, vc=5.599, ve=1.371, ic=1.3627e-3, ib=8.77e-6),
-    ac=AcResult(gain_db=46.94, gain=222.41, f_low=100.0, f_high=None),
-    tran=TranResult(vpp_out=4.393, gain=219.6, clipped=False),
+    ac=AcResult(
+        gain_db=46.94,
+        gain=222.41,
+        f_low=100.0,
+        f_high=None,
+        phase_deg=-179.5,
+        frequencies=(10.0, 100.0, 1000.0, 10000.0),
+        gain_db_points=(20.0, 40.0, 46.94, 47.0),
+        phase_deg_points=(-90.0, -170.0, -179.5, -180.0),
+    ),
+    tran=TranResult(
+        vpp_out=4.393,
+        gain=219.6,
+        clipped=False,
+        times_s=(2.0e-3, 2.1e-3, 2.2e-3, 2.3e-3),
+        vin_v=(0.01, 0.0, -0.01, 0.0),
+        vout_v=(5.5, 4.0, 2.0, 4.0),
+    ),
     executable="ngspice_con",
 )
 
@@ -107,7 +123,7 @@ class TestRoutes(unittest.TestCase):
         self.assertIn('id="bias-circuit-arrow"', page)
         for label in (
             ">VCC<", ">VB<", ">VC<", ">VE<", ">R1<", ">R2<", ">RC<",
-            ">RE<", ">Q1<",
+            ">RE<", ">Q1<", ">Vin<", ">Cin<", ">Cout<", ">RL<", ">GND<",
         ):
             self.assertIn(label, page)
 
@@ -137,6 +153,45 @@ class TestSimulationRoutes(unittest.TestCase):
         self.assertIn("Gain at 1 kHz", page)
         self.assertIn("222.4", page)
         self.assertIn("Simulated VBE", page)
+
+    def test_dashboard_has_navy_header_and_three_columns(self):
+        page = self.client.get("/").get_data(as_text=True)
+        for text in (
+            "CE Amplifier Lab",
+            "DC Bias / AC / Transient",
+            "Circuit &amp; Parameters",
+            "Simulation &amp; Plots",
+            "Engineering Results",
+            "Run Simulation",
+            "Engine: analytical",
+        ):
+            self.assertIn(text, page)
+
+    def test_dashboard_plots_use_simulated_samples(self):
+        with patch("app.simulate_divider", return_value=FAKE_SPICE):
+            page = self.client.post(
+                "/", data={**FORM, "simulate": "1"}
+            ).get_data(as_text=True)
+        for marker in (
+            'id="dc-compare-title"',
+            'id="bode-title"',
+            'id="waveforms-title"',
+            'stroke="#0f766e"',
+            'stroke="#c2410c"',
+            "Time (ms)",
+            "Engine: ngspice",
+        ):
+            self.assertIn(marker, page)
+
+    def test_fixed_mode_has_no_simulation_plots(self):
+        data = {
+            "mode": "fixed", "vcc": "12", "rb": "470", "rc": "4.7",
+            "beta": "150", "vbe": "0.7", "simulate": "1",
+        }
+        page = self.client.post("/", data=data).get_data(as_text=True)
+        self.assertNotIn('id="bode-title"', page)
+        self.assertNotIn('id="waveforms-title"', page)
+        self.assertIn("Engine: analytical", page)
 
     def test_simulation_failure_degrades_gracefully(self):
         with patch(

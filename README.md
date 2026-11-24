@@ -164,8 +164,12 @@ ratio is at least 10, and the percent difference in `IC` is shown alongside.
 
 ## ngspice cross-check (Lab 4)
 
-Tick **Also run ngspice** on the Voltage Divider form to simulate the same
-stage and compare it with the analytical solution.
+Tick **Include ngspice (.op / .ac / .tran)** on the Voltage Divider form and
+select **Run Simulation** to simulate the same stage. The dashboard places the
+circuit and parameters on the left, real DC/AC/transient plots in the middle,
+and engineering result cards on the right; the Bode and waveform plots use the
+actual sweep and transient samples returned by ngspice. A full-page capture is
+saved at `docs/evidence/lab4-ce-divider-ui.png`.
 
 Requirements: `ngspice_con` 47 or newer. Verified with `ngspice-47_64.7z`
 installed at `C:\Spice64` with `C:\Spice64\bin` on the user PATH. If ngspice is
@@ -198,8 +202,9 @@ app.py                  Flask routes, mode dispatch, form parsing and filters
 electrical.py           fixed-bias, emitter-bias and voltage-divider calculations
 engineering/bjt.py      voltage-divider approximation and legacy exact module
 engineering/ngspice.py  optional .op/.ac/.tran cross-check via ngspice_con
-templates/index.html    single-page form and results
-static/style.css        stylesheet
+engineering/plots.py     server-side SVG plots from real ngspice samples
+templates/index.html     three-column CE Amplifier Lab dashboard
+static/style.css         dashboard stylesheet
 tests/                  engineering, route and simulator tests
 docs/validation.md      A1-A5 browser validation record
 docs/evidence/          full-page screenshots for each validation case

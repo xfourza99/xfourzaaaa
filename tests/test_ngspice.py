@@ -77,6 +77,20 @@ class TestSimulation(unittest.TestCase):
         ratio = self.result.tran.gain / self.result.ac.gain
         self.assertAlmostEqual(ratio, 1.0, delta=0.15)
 
+    def test_ac_sweep_samples_are_available_for_plotting(self):
+        ac = self.result.ac
+        self.assertGreater(len(ac.frequencies), 20)
+        self.assertEqual(len(ac.frequencies), len(ac.gain_db_points))
+        self.assertEqual(len(ac.frequencies), len(ac.phase_deg_points))
+        self.assertTrue(all(math.isfinite(value) for value in ac.phase_deg_points))
+
+    def test_transient_samples_pair_input_and_output(self):
+        tran = self.result.tran
+        self.assertGreater(len(tran.times_s), 50)
+        self.assertEqual(len(tran.times_s), len(tran.vin_v))
+        self.assertEqual(len(tran.times_s), len(tran.vout_v))
+        self.assertLess(max(abs(v) for v in tran.vin_v), 0.02)
+
 
 if __name__ == "__main__":
     unittest.main()

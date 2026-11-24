@@ -80,6 +80,11 @@ class AcResult:
     gain: float
     f_low: float | None
     f_high: float | None
+    # Sweep samples, kept so the UI can plot a real Bode response.
+    phase_deg: float = 0.0
+    frequencies: tuple[float, ...] = ()
+    gain_db_points: tuple[float, ...] = ()
+    phase_deg_points: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -87,6 +92,10 @@ class TranResult:
     vpp_out: float
     gain: float
     clipped: bool
+    # Steady-state window, kept so the UI can plot real waveforms.
+    times_s: tuple[float, ...] = ()
+    vin_v: tuple[float, ...] = ()
+    vout_v: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -161,7 +170,7 @@ def build_netlist(
         f"ac dec {AC_POINTS_PER_DECADE} {_fmt(AC_START_HZ)} {_fmt(AC_STOP_HZ)}",
         "wrdata ac.txt vdb(out) vp(out)",
         f"tran {_fmt(TRAN_STEP_S)} {_fmt(TRAN_STOP_S)}",
-        "wrdata tran.txt v(vc)",
+        "wrdata tran.txt v(in) v(vc)",
         ".endc",
         ".end",
     ]
@@ -206,8 +215,13 @@ def _index_at_hz(freqs: list[float], target: float) -> int:
 def _analyse_ac(columns: dict[str, list[float]]) -> AcResult:
     freqs = columns.get("frequency") or []
     db = columns.get("vdb(out)") or []
+    phase = columns.get("vp(out)") or []
     if not freqs or len(freqs) != len(db):
         raise SimulationError("AC output is missing or malformed.")
+    if not phase:
+        phase = [0.0] * len(freqs)
+    if len(phase) != len(freqs):
+        phase = [0.0] * len(freqs)
 
     index = _index_at_hz(freqs, AC_PROBE_HZ)
     gain_db = db[index]
@@ -223,7 +237,16 @@ def _analyse_ac(columns: dict[str, list[float]]) -> AcResult:
     # number that merely echoes AC_STOP_HZ.
     if f_high is not None and f_high >= freqs[-1]:
         f_high = None
-    return AcResult(gain_db=gain_db, gain=gain, f_low=f_low, f_high=f_high)
+    return AcResult(
+        gain_db=gain_db,
+        gain=gain,
+        f_low=f_low,
+        f_high=f_high,
+        phase_deg=phase[index],
+        frequencies=tuple(freqs),
+        gain_db_points=tuple(db),
+        phase_deg_points=tuple(phase),
+    )
 
 
 def _analyse_tran(
@@ -242,7 +265,24 @@ def _analyse_tran(
     vpp = max(samples) - min(samples)
     input_vpp = 2.0 * TRAN_INPUT_AMPLITUDE_V
     clipped = max(samples) > vcc - 0.05 or min(samples) < ve + 0.25
-    return TranResult(vpp_out=vpp, gain=vpp / input_vpp, clipped=clipped)
+
+    # Keep the full transient trace, paired sample by sample. The steady-state
+    # window is what the summary measures and what the plot displays.
+    pairs = [
+        (time, vin, vout)
+        for time, vin, vout in zip(
+            times, columns.get("v(in)") or [], columns.get("v(vc)") or []
+        )
+        if time >= window
+    ]
+    return TranResult(
+        vpp_out=vpp,
+        gain=vpp / input_vpp,
+        clipped=clipped,
+        times_s=tuple(time for time, _, _ in pairs),
+        vin_v=tuple(vin for _, vin, _ in pairs),
+        vout_v=tuple(vout for _, _, vout in pairs),
+    )
 
 
 def simulate_divider(
