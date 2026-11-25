@@ -4,9 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CE Amplifier Lab</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1f3a'/%3E%3Cpath d='M5 18h5l3-8 4 14 3-9h7' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  {% macro field_aria(name) -%}
+  {% if error_field == name %} aria-invalid="true" aria-describedby="{{ name }}-error" autofocus{% endif %}
+  {%- endmacro %}
+  {% macro field_error(name) -%}
+  {% if error_field == name %}<p class="field-error" id="{{ name }}-error">{{ error_message }}</p>{% endif %}
+  {%- endmacro %}
+  {% macro plot_badge(name, analysis) -%}
+  {% set source = (plot_sources or {}).get(name) %}
+  <span class="engine-badge plot-engine{% if source == 'ngspice' %} engine-ready{% elif source == 'analytical' %} engine-info{% else %} engine-idle{% endif %}">
+    {% if source == 'ngspice' %}ngspice {{ analysis }}{% elif source == 'analytical' %}analytical{% else %}not run{% endif %}
+  </span>
+  {%- endmacro %}
   <header class="topbar">
     <h1>CE Amplifier Lab</h1>
     <p class="topbar-meta">DC Bias / AC / Transient</p>
@@ -115,7 +128,10 @@
         {% endif %}
 
         {% if error_message %}
-        <p class="error" role="alert">{{ error_message }}</p>
+        <div class="error" role="alert">
+          <strong class="alert-title">Input error</strong>
+          <span>{{ error_message }}</span>
+        </div>
         {% endif %}
 
         <form method="get" class="mode-form">
@@ -130,69 +146,98 @@
           <div class="actions">
             <button type="submit" class="button-secondary">Load mode</button>
           </div>
+          <p class="form-hint">Loading a topology reloads the page and clears the fields below.</p>
         </form>
 
         <form method="post" class="bias-form">
           <input type="hidden" name="mode" value="{{ mode }}">
 
-          <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
-            <label for="vcc">VCC (V)</label>
-            <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
-                   placeholder="12" value="{{ form.get('vcc', '') }}" required>
-          </div>
+          <fieldset class="field-group">
+            <legend>Supply &amp; bias network</legend>
+            <div class="field-grid">
+              <div class="field{% if error_field == 'vcc' %} invalid{% endif %}">
+                <label for="vcc">VCC (V)</label>
+                <input id="vcc" name="vcc" type="number" step="any" inputmode="decimal"
+                       placeholder="12" value="{{ form.get('vcc', '') }}" required{{ field_aria('vcc') }}>
+                {{ field_error('vcc') }}
+              </div>
+
+              {% if mode == 'divider' %}
+              <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
+                <label for="r1">R1 (kΩ)</label>
+                <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
+                       placeholder="47" value="{{ form.get('r1', '') }}" required{{ field_aria('r1') }}>
+                {{ field_error('r1') }}
+              </div>
+              <div class="field{% if error_field == 'r2' %} invalid{% endif %}">
+                <label for="r2">R2 (kΩ)</label>
+                <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
+                       placeholder="10" value="{{ form.get('r2', '') }}" required{{ field_aria('r2') }}>
+                {{ field_error('r2') }}
+              </div>
+              {% else %}
+              <div class="field{% if error_field == 'rb' %} invalid{% endif %}">
+                <label for="rb">RB (kΩ)</label>
+                <input id="rb" name="rb" type="number" step="any" inputmode="decimal"
+                       placeholder="470" value="{{ form.get('rb', '') }}" required{{ field_aria('rb') }}>
+                {{ field_error('rb') }}
+              </div>
+              {% endif %}
+            </div>
+          </fieldset>
+
+          <fieldset class="field-group">
+            <legend>Collector &amp; emitter</legend>
+            <div class="field-grid">
+              <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
+                <label for="rc">RC (kΩ)</label>
+                <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
+                       placeholder="4.7" value="{{ form.get('rc', '') }}" required{{ field_aria('rc') }}>
+                {{ field_error('rc') }}
+              </div>
+
+              {% if mode == 'divider' or mode == 'emitter' %}
+              <div class="field{% if error_field == 're' %} invalid{% endif %}">
+                <label for="re">RE (kΩ)</label>
+                <input id="re" name="re" type="number" step="any" inputmode="decimal"
+                       placeholder="1" value="{{ form.get('re', '') }}" required{{ field_aria('re') }}>
+                {{ field_error('re') }}
+              </div>
+              {% endif %}
+            </div>
+          </fieldset>
+
+          <fieldset class="field-group">
+            <legend>Transistor model</legend>
+            <div class="field-grid">
+              <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
+                <label for="beta">beta</label>
+                <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
+                       placeholder="150" value="{{ form.get('beta', '') }}" required{{ field_aria('beta') }}>
+                {{ field_error('beta') }}
+              </div>
+              <div class="field{% if error_field == 'vbe' %} invalid{% endif %}">
+                <label for="vbe">VBE (V)</label>
+                <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
+                       placeholder="0.7" value="{{ form.get('vbe', '') }}" required{{ field_aria('vbe') }}>
+                {{ field_error('vbe') }}
+              </div>
+            </div>
+          </fieldset>
 
           {% if mode == 'divider' %}
-          <div class="field{% if error_field == 'r1' %} invalid{% endif %}">
-            <label for="r1">R1 (kΩ)</label>
-            <input id="r1" name="r1" type="number" step="any" inputmode="decimal"
-                   placeholder="47" value="{{ form.get('r1', '') }}" required>
-          </div>
-          <div class="field{% if error_field == 'r2' %} invalid{% endif %}">
-            <label for="r2">R2 (kΩ)</label>
-            <input id="r2" name="r2" type="number" step="any" inputmode="decimal"
-                   placeholder="10" value="{{ form.get('r2', '') }}" required>
-          </div>
-          {% else %}
-          <div class="field{% if error_field == 'rb' %} invalid{% endif %}">
-            <label for="rb">RB (kΩ)</label>
-            <input id="rb" name="rb" type="number" step="any" inputmode="decimal"
-                   placeholder="470" value="{{ form.get('rb', '') }}" required>
-          </div>
-          {% endif %}
-
-          <div class="field{% if error_field == 'rc' %} invalid{% endif %}">
-            <label for="rc">RC (kΩ)</label>
-            <input id="rc" name="rc" type="number" step="any" inputmode="decimal"
-                   placeholder="4.7" value="{{ form.get('rc', '') }}" required>
-          </div>
-
-          {% if mode == 'divider' or mode == 'emitter' %}
-          <div class="field{% if error_field == 're' %} invalid{% endif %}">
-            <label for="re">RE (kΩ)</label>
-            <input id="re" name="re" type="number" step="any" inputmode="decimal"
-                   placeholder="1" value="{{ form.get('re', '') }}" required>
-          </div>
-          {% endif %}
-
-          <div class="field{% if error_field == 'beta' %} invalid{% endif %}">
-            <label for="beta">beta</label>
-            <input id="beta" name="beta" type="number" step="any" inputmode="decimal"
-                   placeholder="150" value="{{ form.get('beta', '') }}" required>
-          </div>
-          <div class="field{% if error_field == 'vbe' %} invalid{% endif %}">
-            <label for="vbe">VBE (V)</label>
-            <input id="vbe" name="vbe" type="number" step="any" inputmode="decimal"
-                   placeholder="0.7" value="{{ form.get('vbe', '') }}" required>
-          </div>
-          {% if mode == 'divider' %}
-          <div class="field checkbox">
-            <label>
-              <input type="checkbox" name="simulate" value="1"
+          <fieldset class="field-group">
+            <legend>Simulation</legend>
+            <div class="field checkbox">
+              <input id="simulate" type="checkbox" name="simulate" value="1"
+                     aria-describedby="simulate-help"
                      {% if form.get('simulate') or (not form and mode == 'divider') %}checked{% endif %}>
-              Include ngspice (.op / .ac / .tran)
-            </label>
-          </div>
+              <label for="simulate">Include ngspice (.op / .ac / .tran)</label>
+            </div>
+            <p class="field-help" id="simulate-help">Adds the operating-point cross-check and AC/transient plots when ngspice is installed.</p>
+          </fieldset>
           {% endif %}
+
           <div class="actions">
             <button type="submit" class="button-primary">Run Simulation</button>
           </div>
@@ -202,39 +247,90 @@
       <section class="panel column-plots" aria-labelledby="plots-title">
         <h2 id="plots-title">Simulation &amp; Plots</h2>
 
-        <section class="plot-section" id="plot-dc">
-          <div class="plot-heading"><h3>DC</h3><span>Operating point</span></div>
-          {% if plots %}
-          <div class="plot-frame">{{ plots.dc|safe }}</div>
-          <p class="plot-caption">Paired bars show the analytical value beside the simulated value.</p>
+        {% if spice_error %}
+        <div class="plot-status" role="status">
+          <strong>ngspice unavailable.</strong> The analytical DC load line is still plotted; AC and transient plots need a real solver run.
+        </div>
+        {% endif %}
+
+        <section class="plot-section" id="plot-dc-load">
+          <div class="plot-heading">
+            <h3>DC</h3><span>Load line &amp; Q-point</span>
+            {{ plot_badge('dc_load', '.op') }}
+          </div>
+          {% if plots and plots.dc_load %}
+          <div class="plot-frame" tabindex="0" role="group" aria-label="Scrollable DC load line and operating point plot">{{ plots.dc_load|safe }}</div>
+          <p class="plot-caption">VCE on the horizontal axis (V); IC on the vertical axis (mA). Blue line: DC load line. Orange marker: Q-point labelled ICQ and VCEQ.</p>
+          <p class="scroll-hint">Scroll sideways to inspect the full plot.</p>
           {% else %}
-          <p class="empty-state">Run the reference divider circuit to compare the DC operating point.</p>
+          <p class="empty-state">Run the circuit to plot the DC load line and Q-point.</p>
+          {% endif %}
+        </section>
+
+        <section class="plot-section" id="plot-dc">
+          <div class="plot-heading">
+            <h3>DC</h3><span>Analytical vs. ngspice</span>
+            {{ plot_badge('dc', '.op') }}
+          </div>
+          {% if plots and plots.dc %}
+          <div class="plot-frame" tabindex="0" role="group" aria-label="Scrollable DC operating-point comparison plot">{{ plots.dc|safe }}</div>
+          <p class="plot-caption">Paired bars: analytical (blue) beside ngspice (navy). Percentages are the difference from analytical.</p>
+          <p class="scroll-hint">Scroll sideways to inspect the full plot.</p>
+          {% elif spice_error %}
+          <p class="empty-state">The DC comparison needs ngspice.</p>
+          {% else %}
+          <p class="empty-state">Run the divider with ngspice enabled to compare the simulated operating point.</p>
           {% endif %}
         </section>
 
         <section class="plot-section" id="plot-ac">
-          <div class="plot-heading"><h3>AC</h3><span>Bode response</span></div>
-          {% if plots %}
-          <div class="plot-frame">{{ plots.ac|safe }}</div>
-          <p class="plot-caption">Magnitude and phase from the simulated 10 Hz – 1 MHz sweep.</p>
+          <div class="plot-heading">
+            <h3>AC</h3><span>Bode response</span>
+            {{ plot_badge('ac', '.ac') }}
+          </div>
+          {% if plots and plots.ac %}
+          <div class="plot-frame" tabindex="0" role="group" aria-label="Scrollable Bode magnitude and phase plot">{{ plots.ac|safe }}</div>
+          <p class="plot-caption">Frequency in Hz (log axis). Left axis: gain in dB (blue). Right axis: phase in degrees (teal). Dashed marker: 1 kHz probe.</p>
+          <p class="scroll-hint">Scroll sideways to inspect the full plot.</p>
+          {% elif spice_error %}
+          <p class="empty-state">No AC sweep ran because ngspice was unavailable.</p>
           {% else %}
-          <p class="empty-state">Run the simulation to plot gain and phase versus frequency.</p>
+          <p class="empty-state">Run a divider simulation with ngspice to plot gain and phase versus frequency.</p>
           {% endif %}
         </section>
 
         <section class="plot-section" id="plot-tran">
-          <div class="plot-heading"><h3>Transient</h3><span>Input / output waveforms</span></div>
-          {% if plots %}
-          <div class="plot-frame">{{ plots.tran|safe }}</div>
-          <p class="plot-caption">Vin in teal (mV, right axis), Vout in orange (V, left axis), time in ms.</p>
+          <div class="plot-heading">
+            <h3>Transient</h3><span>Input / output waveforms</span>
+            {{ plot_badge('tran', '.tran') }}
+          </div>
+          {% if plots and plots.tran %}
+          <div class="plot-frame" tabindex="0" role="group" aria-label="Scrollable input and output waveform plot">{{ plots.tran|safe }}</div>
+          <p class="plot-caption">Time in ms. Vout in orange (V, left axis); Vin in teal (mV, right axis).</p>
+          <p class="scroll-hint">Scroll sideways to inspect the full plot.</p>
+          {% elif spice_error %}
+          <p class="empty-state">No transient analysis ran because ngspice was unavailable.</p>
           {% else %}
-          <p class="empty-state">Run the simulation to plot the 1 kHz input and collector output.</p>
+          <p class="empty-state">Run a divider simulation with ngspice to plot the 1 kHz input and collector output.</p>
           {% endif %}
         </section>
       </section>
 
       <section class="panel column-results" aria-labelledby="results-title">
         <h2 id="results-title">Engineering Results</h2>
+
+        <div class="engine-status" role="status" aria-live="polite">
+          <span class="engine-badge{% if spice %} engine-ready{% elif spice_error %} engine-fallback{% endif %}">
+            Engine: {% if spice %}ngspice{% elif spice_error %}analytical fallback{% else %}analytical{% endif %}
+          </span>
+          <span class="engine-detail">
+            {% if spice %}Cross-checked with ngspice (.op / .ac / .tran).
+            {% elif spice_error %}ngspice did not run; the exact analytical solution is shown.
+            {% elif mode == 'divider' %}Exact analytical solution; ngspice has not been run.
+            {% else %}Exact analytical solution, DC only; ngspice applies to the voltage-divider topology.{% endif %}
+          </span>
+        </div>
+
         <div class="results" aria-live="polite">
           {% if result %}
           <div class="result-card">
@@ -247,29 +343,48 @@
             <p class="warning">{{ result.warning }}</p>
             {% endif %}
 
-            {% if spice or spice_error %}<h4>ngspice cross-check</h4>{% endif %}
-            {% if spice_error %}
-            <p class="warning">{{ spice_error }}</p>
-            {% elif spice %}
-            <table class="compare-table">
-              <thead>
-                <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">SPICE</th><th scope="col">Δ</th></tr>
-              </thead>
+            <h4>Key quantities <span class="card-source">analytical</span></h4>
+            <table class="quantity-table key-values">
               <tbody>
-                {% for row in spice_rows %}
-                <tr>
-                  <th scope="row">{{ row.label }}</th>
-                  <td>{% if row.unit == 'v' %}{{ row.analytical|volts }}{% else %}{{ row.analytical|milliamps }}{% endif %}</td>
-                  <td>{% if row.unit == 'v' %}{{ row.spice|volts }}{% else %}{{ row.spice|milliamps }}{% endif %}</td>
-                  <td>{% if row.delta is not none %}{{ "%.1f"|format(row.delta) }}%{% else %}n/a{% endif %}</td>
-                </tr>
-                {% endfor %}
+                <tr><th scope="row">VB</th><td>{{ result.vb|volts }}</td></tr>
+                <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td></tr>
+                <tr><th scope="row">VC</th><td>{{ result.vc|volts }}</td></tr>
+                <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td></tr>
+                <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td></tr>
               </tbody>
             </table>
+
+            {% if spice %}
+            <h4>ngspice cross-check <span class="card-source">.op</span></h4>
+            <div class="table-scroll" tabindex="0" role="group" aria-label="Scrollable ngspice comparison table">
+              <table class="compare-table">
+                <thead>
+                  <tr><th scope="col">Quantity</th><th scope="col">Analytical</th><th scope="col">SPICE</th><th scope="col">Δ vs analytical</th></tr>
+                </thead>
+                <tbody>
+                  {% for row in spice_rows %}
+                  <tr>
+                    <th scope="row">{{ row.label }}</th>
+                    <td>{% if row.unit == 'v' %}{{ row.analytical|volts }}{% else %}{{ row.analytical|milliamps }}{% endif %}</td>
+                    <td>{% if row.unit == 'v' %}{{ row.spice|volts }}{% else %}{{ row.spice|milliamps }}{% endif %}</td>
+                    <td>{% if row.delta is not none %}{{ "%.1f"|format(row.delta) }}%{% else %}n/a{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
             <p class="meta">Simulated VBE = {{ spice.op.vbe|volts }}, entered VBE = {{ form.get('vbe') }} V.</p>
             {% if spice_note %}<p class="note">{{ spice_note }}</p>{% endif %}
+            {% elif spice_error %}
+            <div class="engine-error" role="alert">
+              <p class="engine-error-title">ngspice cross-check unavailable</p>
+              <p class="engine-error-body">{{ spice_error }}</p>
+              <p class="engine-error-meta">The analytical values above are still valid; no numbers were substituted.</p>
+            </div>
+            {% elif mode == 'divider' %}
+            <p class="empty-state">Tick “Include ngspice” before running to add the operating-point cross-check.</p>
             {% else %}
-            <p class="empty-state">Enable ngspice to compare the analytical operating point.</p>
+            <p class="empty-state">The ngspice comparison is available in Voltage Divider mode.</p>
             {% endif %}
 
             <details class="analysis-details">
@@ -292,17 +407,19 @@
               </table>
               {% if mode == 'divider' and approx %}
               <h4>Independent cross-check</h4>
-              <table class="comparison-table">
-                <caption>Exact solution versus beta-independent approximation</caption>
-                <thead>
-                  <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
-                </thead>
-                <tbody>
-                  <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td><td>{{ approx.ve|volts }}</td></tr>
-                  <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td><td>{{ approx.ic|milliamps }}</td></tr>
-                  <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td><td>{{ approx.vce|volts }}</td></tr>
-                </tbody>
-              </table>
+              <div class="table-scroll" tabindex="0" role="group" aria-label="Scrollable approximation comparison table">
+                <table class="comparison-table">
+                  <caption>Exact solution versus beta-independent approximation</caption>
+                  <thead>
+                    <tr><th scope="col">Quantity</th><th scope="col">Exact</th><th scope="col">Approximate</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><th scope="row">VE</th><td>{{ result.ve|volts }}</td><td>{{ approx.ve|volts }}</td></tr>
+                    <tr><th scope="row">IC</th><td>{{ result.ic|milliamps }}</td><td>{{ approx.ic|milliamps }}</td></tr>
+                    <tr><th scope="row">VCE</th><td>{{ result.vce|volts }}</td><td>{{ approx.vce|volts }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
               <p class="meta">
                 beta&middot;RE / RB = {{ "%.1f"|format(approx.beta_re_over_rb) }}
                 {% if result.region == 'active' %}
@@ -321,7 +438,10 @@
           </div>
 
           <div class="result-card">
-            <h3>AC Frequency Response</h3>
+            <div class="results-header">
+              <h3>AC Frequency Response</h3>
+              {% if spice %}<span class="source-chip">ngspice .ac</span>{% endif %}
+            </div>
             {% if spice %}
             <table class="quantity-table">
               <tbody>
@@ -332,13 +452,18 @@
                 <tr><th scope="row">Upper −3 dB</th><td>{% if spice.ac.f_high is not none %}{{ "%.0f"|format(spice.ac.f_high) }} Hz{% else %}&gt; 1 MHz{% endif %}</td></tr>
               </tbody>
             </table>
+            {% elif spice_error %}
+            <p class="empty-state">No AC sweep ran because ngspice was unavailable.</p>
             {% else %}
             <p class="empty-state">No AC sweep has been run.</p>
             {% endif %}
           </div>
 
           <div class="result-card">
-            <h3>Transient Response</h3>
+            <div class="results-header">
+              <h3>Transient Response</h3>
+              {% if spice %}<span class="source-chip">ngspice .tran</span>{% endif %}
+            </div>
             {% if spice %}
             <table class="quantity-table">
               <tbody>
@@ -349,19 +474,17 @@
                 <tr><th scope="row">Clipping</th><td>{% if spice.tran.clipped %}Yes — supply limited{% else %}No{% endif %}</td></tr>
               </tbody>
             </table>
+            {% elif spice_error %}
+            <p class="empty-state">No transient analysis ran because ngspice was unavailable.</p>
             {% else %}
             <p class="empty-state">No transient analysis has been run.</p>
             {% endif %}
           </div>
+          {% elif error_message %}
+          <p class="results-blocked"><strong>No result to show.</strong> Fix the highlighted field and run again. Your entries are preserved.</p>
           {% else %}
-          <p class="empty-state">Set the parameters and run the circuit to see engineering results.</p>
+          <p class="empty-state">Set the parameters and run the circuit to see engineering results. The analytical result is always available; ngspice adds the cross-check and plots.</p>
           {% endif %}
-        </div>
-
-        <div class="engine-status">
-          <span class="engine-badge{% if spice %} engine-ready{% endif %}">
-            Engine: {% if spice %}ngspice{% else %}analytical{% endif %}
-          </span>
         </div>
       </section>
     </div>

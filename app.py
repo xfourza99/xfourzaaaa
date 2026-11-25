@@ -27,7 +27,12 @@ from engineering.ngspice import (
     SimulationError,
     simulate_divider,
 )
-from engineering.plots import bode_svg, dc_compare_svg, waveforms_svg
+from engineering.plots import (
+    bode_svg,
+    dc_compare_svg,
+    dc_load_line_svg,
+    waveforms_svg,
+)
 
 MODE_LABELS = {
     MODE_DIVIDER: "Voltage Divider",
@@ -110,6 +115,7 @@ def create_app() -> Flask:
         context.setdefault("spice_error", None)
         context.setdefault("spice_note", None)
         context.setdefault("plots", None)
+        context.setdefault("plot_sources", None)
         context.setdefault("spice_input_mv", TRAN_INPUT_AMPLITUDE_V * 1e3)
         context.setdefault("spice_time_ms", TRAN_STOP_S * 1e3)
         return render_template("index.html", **context)
@@ -154,7 +160,6 @@ def create_app() -> Flask:
             spice_rows = None
             spice_error = None
             spice_note = None
-            plots = None
 
             if mode == MODE_DIVIDER:
                 result = analyze_voltage_divider(**values)
@@ -175,18 +180,6 @@ def create_app() -> Flask:
                         )
                         spice_rows = _spice_rows(result, spice)
                         spice_note = SPICE_NOTE
-                        plots = {
-                            "dc": dc_compare_svg(spice_rows),
-                            "ac": bode_svg(spice.ac),
-                            "tran": waveforms_svg(spice.tran),
-                        }
-                        if result["region"] == "saturation":
-                            spice_note += (
-                                " The analytical VCE is pinned at the 0.2 V"
-                                " saturation convention, while the model"
-                                " resolves its own, usually lower, saturation"
-                                " voltage."
-                            )
                     except SimulationError as error:
                         spice_error = str(error)
             elif mode == MODE_FIXED:
@@ -201,6 +194,46 @@ def create_app() -> Flask:
                 approx_note = None
             else:
                 raise ValidationError("mode", "Unknown circuit mode")
+
+            spice_active = spice is not None
+            source_label = "ngspice" if spice_active else "analytical"
+            icq_a = spice.op.ic if spice_active else result["ic"]
+            vceq_v = spice.op.vce if spice_active else result["vce"]
+            plots = {
+                "dc_load": dc_load_line_svg(
+                    vcc=values["vcc"],
+                    rc_ohm=values["rc"],
+                    re_ohm=values.get("re", 0.0),
+                    beta=values["beta"],
+                    icq_a=icq_a,
+                    vceq_v=vceq_v,
+                    source=source_label,
+                )
+            }
+            plot_sources = {"dc_load": source_label}
+
+            if spice_active:
+                plots.update(
+                    {
+                        "dc": dc_compare_svg(spice_rows),
+                        "ac": bode_svg(spice.ac),
+                        "tran": waveforms_svg(spice.tran),
+                    }
+                )
+                plot_sources.update(
+                    {
+                        "dc": "ngspice",
+                        "ac": "ngspice",
+                        "tran": "ngspice",
+                    }
+                )
+                if result["region"] == "saturation":
+                    spice_note += (
+                        " The analytical VCE is pinned at the 0.2 V"
+                        " saturation convention, while the model"
+                        " resolves its own, usually lower, saturation"
+                        " voltage."
+                    )
         except ValidationError as error:
             render_mode = mode if mode in MODE_FIELDS else MODE_DIVIDER
             return (
@@ -229,6 +262,7 @@ def create_app() -> Flask:
             spice_error=spice_error,
             spice_note=spice_note,
             plots=plots,
+            plot_sources=plot_sources,
             error_field=None,
             error_message=None,
         )

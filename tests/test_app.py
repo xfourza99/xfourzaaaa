@@ -183,6 +183,23 @@ class TestSimulationRoutes(unittest.TestCase):
         ):
             self.assertIn(marker, page)
 
+    def test_analytical_dc_load_line_renders_with_q_point(self):
+        page = self.client.post("/", data=FORM).get_data(as_text=True)
+        self.assertIn('id="dc-load-line-title"', page)
+        self.assertIn("DC load line with operating point", page)
+        self.assertIn("ICQ=", page)
+        self.assertIn("VCEQ=", page)
+        self.assertIn("analytical", page)
+
+    def test_ngspice_run_labels_every_plot_engine(self):
+        with patch("app.simulate_divider", return_value=FAKE_SPICE):
+            page = self.client.post(
+                "/", data={**FORM, "simulate": "1"}
+            ).get_data(as_text=True)
+        for badge in ("ngspice .op", "ngspice .ac", "ngspice .tran"):
+            self.assertIn(badge, page)
+        self.assertIn('id="dc-load-line-title"', page)
+
     def test_fixed_mode_has_no_simulation_plots(self):
         data = {
             "mode": "fixed", "vcc": "12", "rb": "470", "rc": "4.7",

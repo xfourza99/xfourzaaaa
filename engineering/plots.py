@@ -64,6 +64,138 @@ def _legend(parts: list[tuple[str, str]], x: float, y: float) -> str:
     return "".join(items)
 
 
+def dc_load_line_svg(
+    *,
+    vcc: float,
+    rc_ohm: float,
+    re_ohm: float,
+    beta: float,
+    icq_a: float,
+    vceq_v: float,
+    source: str,
+) -> str:
+    """DC load line on IC-versus-VCE axes with a labelled operating point."""
+    width, height = 640, 300
+    left, right = 68, 28
+    top, bottom = 28, 52
+    title_id = "dc-load-line-title"
+    desc = (
+        "Collector current in milliamps versus collector-emitter voltage in "
+        "volts. The load line crosses the VCE axis at VCC and the IC axis at "
+        "the saturation current. The Q marker reports ICQ and VCEQ from the "
+        f"active engine ({source})."
+    )
+    lines = _open_svg(
+        title_id,
+        "DC load line with operating point",
+        desc,
+        width,
+        height,
+    )
+
+    finite = all(
+        math.isfinite(value)
+        for value in (vcc, rc_ohm, re_ohm, beta, icq_a, vceq_v)
+    )
+    if not finite or vcc <= 0 or rc_ohm <= 0 or re_ohm < 0 or beta < 1:
+        lines.append(
+            f'<text x="{width // 2}" y="{height // 2}" text-anchor="middle" '
+            f'fill="{_MUTED}" font-size="13">Valid DC inputs are required to '
+            "plot the load line.</text>"
+        )
+        lines.append("</svg>")
+        return "".join(lines)
+
+    # IE = IC * (1 + 1/beta), the same relation used by the analytical model.
+    emitter_factor = 1.0 + 1.0 / beta if re_ohm > 0 else 0.0
+    load_slope_ohm = rc_ohm + re_ohm * emitter_factor
+    ic_max_ma = vcc / load_slope_ohm * 1e3
+    icq_ma = icq_a * 1e3
+    x_max = max(vcc, vceq_v, 1.0)
+    y_max = max(ic_max_ma, icq_ma, 0.1) * 1.08
+    qx_v = min(max(vceq_v, 0.0), x_max)
+    qy_ma = min(max(icq_ma, 0.0), y_max)
+
+    def px(value: float) -> float:
+        return left + value / x_max * (width - left - right)
+
+    def py(value: float) -> float:
+        return top + (y_max - value) / y_max * (height - top - bottom)
+
+    for index in range(6):
+        x_value = x_max * index / 5
+        x = px(x_value)
+        lines.append(
+            f'<line x1="{_fmt(x)}" y1="{top}" x2="{_fmt(x)}" '
+            f'y2="{height - bottom}" stroke="{_GRID}" stroke-width="1"/>'
+        )
+        lines.append(
+            f'<text x="{_fmt(x)}" y="{height - bottom + 18}" '
+            f'text-anchor="middle" fill="{_MUTED}" font-size="11">'
+            f"{x_value:.1f}</text>"
+        )
+        y_value = y_max * index / 5
+        y = py(y_value)
+        lines.append(
+            f'<line x1="{left}" y1="{_fmt(y)}" x2="{width - right}" '
+            f'y2="{_fmt(y)}" stroke="{_GRID}" stroke-width="1"/>'
+        )
+        lines.append(
+            f'<text x="{left - 8}" y="{_fmt(y + 4)}" text-anchor="end" '
+            f'fill="{_MUTED}" font-size="11">{y_value:.2f}</text>'
+        )
+
+    qx, qy = px(qx_v), py(qy_ma)
+    lines.append(
+        f'<line x1="{left}" y1="{_fmt(qy)}" x2="{_fmt(qx)}" y2="{_fmt(qy)}" '
+        f'stroke="{_ORANGE}" stroke-width="1" stroke-dasharray="4 4"/>'
+    )
+    lines.append(
+        f'<line x1="{_fmt(qx)}" y1="{_fmt(qy)}" x2="{_fmt(qx)}" '
+        f'y2="{height - bottom}" stroke="{_ORANGE}" stroke-width="1" '
+        'stroke-dasharray="4 4"/>'
+    )
+    lines.append(
+        f'<line x1="{_fmt(px(0))}" y1="{_fmt(py(ic_max_ma))}" '
+        f'x2="{_fmt(px(vcc))}" y2="{_fmt(py(0))}" stroke="{_BLUE}" '
+        'stroke-width="2.5" stroke-linejoin="round"/>'
+    )
+    lines.append(
+        f'<circle cx="{_fmt(qx)}" cy="{_fmt(qy)}" r="7" fill="{_ORANGE}" '
+        'stroke="#ffffff" stroke-width="2"/>'
+    )
+    lines.append(
+        f'<circle cx="{_fmt(qx)}" cy="{_fmt(qy)}" r="2" fill="#ffffff"/>'
+    )
+
+    q_label = f"Q: ICQ={icq_ma:.3f} mA, VCEQ={qx_v:.3f} V"
+    right_side = qx > left + (width - left - right) * 0.62
+    label_x = qx - 10 if right_side else qx + 10
+    label_y = qy - 12 if qy > top + 22 else qy + 22
+    lines.append(
+        f'<text x="{_fmt(label_x)}" y="{_fmt(label_y)}" '
+        f'text-anchor="{"end" if right_side else "start"}" '
+        f'fill="{_INK}" font-size="12" font-weight="600">{q_label}</text>'
+    )
+    lines.append(
+        f'<text x="{width // 2}" y="{height - 6}" text-anchor="middle" '
+        f'fill="{_MUTED}" font-size="11">VCE (V)</text>'
+    )
+    lines.append(
+        f'<text transform="translate(16 {height // 2}) rotate(-90)" '
+        f'text-anchor="middle" fill="{_MUTED}" font-size="11">IC (mA)</text>'
+    )
+    lines.append(
+        _legend(
+            [(_BLUE, "DC load line"), (_ORANGE, f"Q-point ({source})")],
+            left + 6,
+            top + 14,
+        )
+    )
+    lines.append("</svg>")
+    return "".join(lines)
+
+
 def dc_compare_svg(rows: list[dict]) -> str:
     """Grouped bars comparing the analytical and simulated DC quantities."""
     width, height = 640, 236
@@ -217,6 +349,18 @@ def bode_svg(ac: AcResult) -> str:
             f'<polyline points="{ph_points}" fill="none" stroke="{_TEAL}" '
             'stroke-width="2" stroke-linejoin="round"/>'
         )
+    lines.append(
+        f'<text x="{width // 2}" y="{height - 6}" text-anchor="middle" '
+        f'fill="{_MUTED}" font-size="11">Frequency (Hz)</text>'
+    )
+    lines.append(
+        f'<text transform="translate(16 {height // 2}) rotate(-90)" '
+        f'text-anchor="middle" fill="{_MUTED}" font-size="11">Gain (dB)</text>'
+    )
+    lines.append(
+        f'<text transform="translate({width - 12} {height // 2}) rotate(90)" '
+        f'text-anchor="middle" fill="{_MUTED}" font-size="11">Phase (°)</text>'
+    )
     lines.append(_legend([(_BLUE, "Gain (dB)"), (_TEAL, "Phase (°)")], left + 6, top + 16))
     lines.append("</svg>")
     return "".join(lines)
@@ -311,6 +455,14 @@ def waveforms_svg(tran: TranResult) -> str:
     lines.append(
         f'<polyline points="{vout_points}" fill="none" stroke="{_ORANGE}" '
         'stroke-width="2.5" stroke-linejoin="round"/>'
+    )
+    lines.append(
+        f'<text transform="translate(16 {height // 2}) rotate(-90)" '
+        f'text-anchor="middle" fill="{_MUTED}" font-size="11">Vout (V)</text>'
+    )
+    lines.append(
+        f'<text transform="translate({width - 12} {height // 2}) rotate(90)" '
+        f'text-anchor="middle" fill="{_MUTED}" font-size="11">Vin (mV)</text>'
     )
     lines.append(_legend([(_TEAL, "Vin (mV)"), (_ORANGE, "Vout (V)")], left + 6, top + 16))
     lines.append("</svg>")
